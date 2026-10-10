@@ -38,6 +38,8 @@ A release `.pkg.tar.zst` can also be installed with `sudo pacman -U`, provided i
 KWin ABI matches your installed version. Matching source is included in every
 release.
 
+Uninstall with `sudo pacman -R kwin-smooth-autoscroll`.
+
 After installation, log out and back in. Open **System Settings → Window
 Management → Desktop Effects**, enable **Smooth Autoscroll**, and use its
 Configure button to adjust speed, dead zone, appearance, and excluded apps.

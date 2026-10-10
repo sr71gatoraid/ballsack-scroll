@@ -10,7 +10,7 @@ plugin metadata. GUI tests use Qt's offscreen platform.
 
 The isolated runtime tests require an installed KWin Wayland binary, a compiler,
 Qt/Wayland development files, D-Bus, and wayland-scanner. The browser variants
-also require `electron` in PATH. They use temporary profiles and a private
+also require `electron42` in PATH. They use temporary profiles and a private
 headless compositor; they do not open accounts or inspect application content.
 
 ```sh
