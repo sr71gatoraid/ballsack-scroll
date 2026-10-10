@@ -39,20 +39,20 @@ kconfig_add_kcfg_files(autoscroll_effect_sources
     "${CMAKE_CURRENT_SOURCE_DIR}/../config/autoscrollconfig.kcfgc"
 )
 
-kcoreaddons_add_plugin(autoscroll
+kcoreaddons_add_plugin(smoothautoscroll
     SOURCES ${autoscroll_effect_sources}
     INSTALL_NAMESPACE "kwin/effects/plugins"
 )
-set_property(TARGET autoscroll APPEND PROPERTY AUTOGEN_TARGET_DEPENDS
+set_property(TARGET smoothautoscroll APPEND PROPERTY AUTOGEN_TARGET_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/metadata.json"
 )
 
-target_compile_definitions(autoscroll PRIVATE
+target_compile_definitions(smoothautoscroll PRIVATE
     -DTRANSLATION_DOMAIN=\"kwin_autoscroll\"
 )
 
 if(KWin_VERSION VERSION_LESS "6.7.0")
-    target_compile_definitions(autoscroll PRIVATE
+    target_compile_definitions(smoothautoscroll PRIVATE
         AUTOSCROLL_USE_LEGACY_IMAGE_ITEM_FACTORY
     )
     message(STATUS
@@ -62,7 +62,7 @@ else()
         "KWin ${KWin_VERSION}: creating unified image items directly")
 endif()
 
-target_link_libraries(autoscroll PRIVATE
+target_link_libraries(smoothautoscroll PRIVATE
     autoscroll_engine
     autoscroll_visuals
     KWin::kwin

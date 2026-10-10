@@ -8,6 +8,7 @@
 #include "autoscrollinputdevice.h"
 #include "autoscrollvisual.h"
 #include "configmigration.h"
+#include "glyphstyle.h"
 
 #include <core/output.h>
 #include <effect/effecthandler.h>
@@ -15,8 +16,14 @@
 #include <pointer_input.h>
 #include <scene/workspacescene.h>
 #include <window.h>
+#include <wayland_server.h>
+#include <wayland/seat.h>
+#include <wayland/surface.h>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 #include <chrono>
+#include <QScopedValueRollback>
 
 namespace AutoScroll {
 
@@ -58,6 +65,10 @@ AutoScrollEffect::AutoScrollEffect() {
   m_scrollTimer.setTimerType(Qt::PreciseTimer);
   connect(&m_scrollTimer, &QTimer::timeout, this,
           &AutoScrollEffect::scrollTick);
+  m_holdTimer.setSingleShot(true);
+  m_holdTimer.setInterval(220);
+  connect(&m_holdTimer, &QTimer::timeout, this,
+          &AutoScrollEffect::activatePendingHold);
   connect(KWin::effects, &KWin::EffectsHandler::screenAboutToLock, this,
           &AutoScrollEffect::cancelSession);
   connect(KWin::effects, &KWin::EffectsHandler::screenLockingChanged, this,
@@ -89,6 +100,25 @@ AutoScrollEffect::~AutoScrollEffect() {
 
 bool AutoScrollEffect::isActive() const { return m_session.isActive(); }
 
+QString AutoScrollEffect::debug(const QString &) const {
+  const QPointF pointer = KWin::input()->globalPointer();
+  const QPointF visiblePointer = KWin::Cursors::self()->mouse()->pos();
+  const QPointF clientPointer = KWin::waylandServer()->seat()->pointerPos();
+  return QString::fromUtf8(QJsonDocument(QJsonObject{
+      {QStringLiteral("revision"), QStringLiteral("smooth-autoscroll-0.1.0")},
+      {QStringLiteral("active"), m_session.isActive()},
+      {QStringLiteral("glyphSize"), m_visual->logicalSize()},
+      {QStringLiteral("pointerX"), pointer.x()},
+      {QStringLiteral("pointerY"), pointer.y()},
+      {QStringLiteral("visiblePointerX"), visiblePointer.x()},
+      {QStringLiteral("visiblePointerY"), visiblePointer.y()},
+      {QStringLiteral("clientPointerX"), clientPointer.x()},
+      {QStringLiteral("clientPointerY"), clientPointer.y()},
+      {QStringLiteral("anchorX"), m_anchorPosition.x()},
+      {QStringLiteral("anchorY"), m_anchorPosition.y()},
+  }).toJson(QJsonDocument::Compact));
+}
+
 void AutoScrollEffect::reconfigure(ReconfigureFlags) {
   const ActivationMode previousActivationMode = m_activationMode;
   m_config->read();
@@ -96,8 +126,9 @@ void AutoScrollEffect::reconfigure(ReconfigureFlags) {
   m_excludedApplications =
       normalizedApplicationExclusions(m_config->excludedApplications());
 
-  if (m_session.isActive() && (previousActivationMode != m_activationMode ||
-                               isWindowExcluded(m_targetWindow))) {
+  if ((m_session.isActive() || m_pendingPress) &&
+      (previousActivationMode != m_activationMode ||
+       isWindowExcluded(m_targetWindow) || isWindowExcluded(m_pendingWindow))) {
     cancelSession();
   }
 
@@ -107,31 +138,31 @@ void AutoScrollEffect::reconfigure(ReconfigureFlags) {
       .accelerationExponent = m_config->accelerationExponent(),
       .horizontalScrolling = m_config->horizontalScrolling(),
   });
-  m_visual->setAppearance(m_config->glyphStyle(), m_config->glyphSize());
+  m_visual->setAppearance(m_config->glyphStyle(), anchorSize());
 
   const bool visualFeedback = m_config->visualFeedback();
   if (m_visualFeedback != visualFeedback) {
     m_visualFeedback = visualFeedback;
     if (m_session.isActive()) {
       if (m_visualFeedback) {
-        if (!m_cursorHidden) {
-          KWin::effects->hideCursor();
-          m_cursorHidden = true;
-        }
-        m_visual->show(m_anchorPosition, m_cursorPosition, cursorScale());
-        updateVisual();
+        m_visual->show(m_anchorPosition, cursorScale());
       } else {
         m_visual->hide();
-        if (m_cursorHidden) {
-          KWin::effects->showCursor();
-          m_cursorHidden = false;
-        }
       }
     }
   }
 }
 
 bool AutoScrollEffect::handlePointerMotion(KWin::PointerMotionEvent *event) {
+  if (m_pendingPress) {
+    if (m_engine.directionForOffset(event->position - m_pendingPress->position)
+        != Direction::Center) {
+      activatePendingHold();
+    } else if (KWin::input()->findToplevel(event->position) != m_pendingWindow ||
+               KWin::input()->pointer()->decoration()) {
+      clearPendingClick();
+    }
+  }
   if (!m_session.isActive()) {
     return false;
   }
@@ -147,15 +178,30 @@ bool AutoScrollEffect::handlePointerMotion(KWin::PointerMotionEvent *event) {
       m_engine.directionForOffset(m_cursorPosition - m_anchorPosition) !=
       Direction::Center);
   updateVisual();
-  return false;
+  // KWin already updated the real cursor position before this filter. Keep
+  // that free movement, but retain the client's input position at the anchor.
+  // Otherwise wheels follow whichever sidebar/widget the mouse moves over.
+  return true;
 }
 
 bool AutoScrollEffect::handlePointerButton(KWin::PointerButtonEvent *event) {
-  if (event->device == m_inputDevice.get()) {
+  if (m_replayingClick || event->device == m_inputDevice.get()) {
     return false;
   }
 
   const bool pressed = event->state == KWin::PointerButtonState::Pressed;
+  if (!pressed && event->button == Qt::MiddleButton && m_suppressPendingRelease) {
+    m_suppressPendingRelease = false;
+    return true;
+  }
+  if (m_pendingPress) {
+    if (!pressed && event->button == Qt::MiddleButton) {
+      return replayPendingClick(event);
+    }
+    if (pressed) {
+      clearPendingClick();
+    }
+  }
   updateSessionModifiers(event->modifiers);
   const bool wasScrollReady = m_session.isScrollReady();
   const InputDecision decision = m_session.handleButton(event->button, pressed);
@@ -175,7 +221,13 @@ bool AutoScrollEffect::handlePointerButton(KWin::PointerButtonEvent *event) {
       activationModifiersMatch(event->modifiers, activationModifier)) {
     KWin::Window *window = KWin::input()->findToplevel(event->position);
     if (canActivate(window)) {
-      activate(window, event->position, activationModifier);
+      if (m_activationMode == ActivationMode::PreserveClicks) {
+        m_pendingPress = std::make_unique<KWin::PointerButtonEvent>(*event);
+        m_pendingWindow = window;
+        m_holdTimer.start();
+      } else {
+        activate(window, event->position, activationModifier, m_activationMode);
+      }
       return true;
     }
   }
@@ -190,6 +242,7 @@ bool AutoScrollEffect::handlePointerAxis(KWin::PointerAxisEvent *event) {
   if (event->delta == 0.0 && event->deltaV120 == 0) {
     return false;
   }
+  clearPendingClick();
 
   const InputDecision decision = m_session.handleAxis();
   if (decision.cancel) {
@@ -204,6 +257,7 @@ bool AutoScrollEffect::handleKeyboardKey(KWin::KeyboardKeyEvent *event) {
   if (event->key != Qt::Key_Escape) {
     return false;
   }
+  clearPendingClick();
 
   const bool pressed = event->state != KWin::KeyboardKeyState::Released;
   const InputDecision decision = m_session.handleEscape(pressed);
@@ -235,6 +289,8 @@ ActivationMode AutoScrollEffect::configuredActivationMode() const {
     return ActivationMode::Hold;
   case AutoScrollConfig::EnumActivationBehavior::Combined:
     return ActivationMode::Combined;
+  case AutoScrollConfig::EnumActivationBehavior::PreserveClicks:
+    return ActivationMode::PreserveClicks;
   case AutoScrollConfig::EnumActivationBehavior::Toggle:
   default:
     return ActivationMode::Toggle;
@@ -276,31 +332,87 @@ bool AutoScrollEffect::isWindowExcluded(KWin::Window *window) const {
 
 bool AutoScrollEffect::isStillOnTarget() const {
   return m_targetWindow && !m_targetWindow->isDeleted() &&
-         !KWin::input()->pointer()->decoration() &&
-         KWin::input()->findToplevel(m_cursorPosition) == m_targetWindow;
+         !m_targetWindow->isMinimized() && !m_targetWindow->isHidden() &&
+         m_targetWindow->isOnCurrentDesktop() &&
+         m_targetWindow->isOnCurrentActivity() && m_targetSurface &&
+         KWin::waylandServer()->seat()->focusedPointerSurface() == m_targetSurface;
 }
 
 void AutoScrollEffect::activate(KWin::Window *window, const QPointF &position,
-                                Qt::KeyboardModifier activationModifier) {
-  m_session.activate(activationModifier, m_activationMode);
+                                Qt::KeyboardModifier activationModifier,
+                                ActivationMode activationMode) {
+  m_session.activate(activationModifier, activationMode);
   m_targetWindow = window;
+  auto *seat = KWin::waylandServer()->seat();
+  m_targetSurface = seat->focusedPointerSurface();
   m_anchorPosition = position;
   m_cursorPosition = position;
   m_engine.reset();
+  seat->setTimestamp(currentTimestamp());
+  seat->notifyPointerMotion(position);
+  seat->notifyPointerFrame();
 
   m_targetDestroyedConnection = connect(window, &QObject::destroyed, this,
                                         &AutoScrollEffect::cancelSession);
 
   if (m_visualFeedback) {
-    KWin::effects->hideCursor();
-    m_cursorHidden = true;
-    m_visual->show(m_anchorPosition, m_cursorPosition, cursorScale());
+    m_visual->setAppearance(m_config->glyphStyle(), anchorSize());
+    m_visual->show(m_anchorPosition, cursorScale());
   }
 
   if (m_session.isScrollReady()) {
     startScrolling();
   }
   KWin::effects->addRepaintFull();
+}
+
+void AutoScrollEffect::clearPendingClick(bool suppressRelease) {
+  m_holdTimer.stop();
+  if (m_pendingPress && suppressRelease) {
+    m_suppressPendingRelease = true;
+  }
+  m_pendingPress.reset();
+  m_pendingWindow.clear();
+}
+
+void AutoScrollEffect::activatePendingHold() {
+  if (!m_pendingPress) {
+    return;
+  }
+  const QPointF position = KWin::input()->globalPointer();
+  if (!canActivate(m_pendingWindow) ||
+      !KWin::waylandServer()->seat()->focusedPointerSurface() ||
+      !(KWin::input()->qtButtonStates() & Qt::MiddleButton) ||
+      !activationModifiersMatch(KWin::input()->keyboardModifiers(),
+                                configuredActivationModifier())) {
+    clearPendingClick();
+    return;
+  }
+  KWin::Window *window = m_pendingWindow;
+  const QPointF anchor = m_pendingPress->position;
+  clearPendingClick(false);
+  activate(window, anchor, configuredActivationModifier(), ActivationMode::Hold);
+  m_cursorPosition = position;
+  updateVisual();
+}
+
+bool AutoScrollEffect::replayPendingClick(KWin::PointerButtonEvent *release) {
+  // Wayland does not report whether a widget handled a click. Defer only the
+  // middle-button pair until it is known to be a click rather than a hold.
+  // Replay through KWin's normal filters so tab closing, links, paste and
+  // configured window actions retain their native behavior.
+  KWin::PointerButtonEvent press = *m_pendingPress;
+  const bool deliver = canActivate(m_pendingWindow) &&
+      KWin::input()->findToplevel(release->position) == m_pendingWindow;
+  clearPendingClick(false);
+  if (deliver) {
+    QScopedValueRollback<bool> guard(m_replayingClick, true);
+    KWin::input()->processFilters(&KWin::InputEventFilter::pointerButton, &press);
+    KWin::input()->processFilters(&KWin::InputEventFilter::pointerFrame);
+    KWin::input()->processFilters(&KWin::InputEventFilter::pointerButton, release);
+    KWin::input()->processFilters(&KWin::InputEventFilter::pointerFrame);
+  }
+  return true;
 }
 
 void AutoScrollEffect::updateSessionModifiers(Qt::KeyboardModifiers modifiers) {
@@ -320,8 +432,9 @@ void AutoScrollEffect::startScrolling() {
 }
 
 void AutoScrollEffect::cancelSession() {
+  clearPendingClick();
   const bool wasActive = m_session.cancel();
-  if (!wasActive && !m_cursorHidden && (!m_visual || !m_visual->isVisible())) {
+  if (!wasActive && (!m_visual || !m_visual->isVisible())) {
     return;
   }
 
@@ -332,18 +445,24 @@ void AutoScrollEffect::cancelSession() {
     m_engine.reset();
   }
 
+  // Resume normal hover/input at the actual pointer position. There is no
+  // cursor warp; only the client's paused motion stream needs catching up.
+  auto *seat = KWin::waylandServer()->seat();
+  if (wasActive && m_targetSurface && seat->focusedPointerSurface() == m_targetSurface) {
+    seat->setTimestamp(currentTimestamp());
+    seat->notifyPointerMotion(KWin::input()->globalPointer());
+    seat->notifyPointerFrame();
+  }
+
   if (m_targetDestroyedConnection) {
     disconnect(m_targetDestroyedConnection);
     m_targetDestroyedConnection = {};
   }
   m_targetWindow.clear();
+  m_targetSurface.clear();
 
   if (m_visual) {
     m_visual->hide();
-  }
-  if (m_cursorHidden) {
-    KWin::effects->showCursor();
-    m_cursorHidden = false;
   }
   KWin::effects->addRepaintFull();
 }
@@ -364,6 +483,25 @@ void AutoScrollEffect::scrollTick() {
 void AutoScrollEffect::emitFrame(const ScrollFrame &frame) {
   bool emitted = false;
   const auto timestamp = currentTimestamp();
+
+  // A release updates KWin's physical button state before this callback.
+  // Emit end-of-scroll directly before any synthetic input updates focus,
+  // so the stop cannot accidentally be delivered to a different window.
+  if (!frame.horizontalActive && !frame.verticalActive &&
+      (frame.horizontalStopped || frame.verticalStopped)) {
+    auto *seat = KWin::waylandServer()->seat();
+    if (m_targetSurface && seat->focusedPointerSurface() == m_targetSurface) {
+      seat->setTimestamp(timestamp);
+      if (frame.horizontalStopped)
+        seat->notifyPointerAxis(Qt::Horizontal, 0.0, 0,
+                               KWin::PointerAxisSource::Continuous, false);
+      if (frame.verticalStopped)
+        seat->notifyPointerAxis(Qt::Vertical, 0.0, 0,
+                               KWin::PointerAxisSource::Continuous, false);
+      seat->notifyPointerFrame();
+    }
+    return;
+  }
 
   if (frame.horizontalActive || frame.horizontalStopped) {
     Q_EMIT m_inputDevice->pointerAxisChanged(
@@ -390,13 +528,23 @@ void AutoScrollEffect::updateVisual() {
   if (!m_visualFeedback || !m_visual->isVisible()) {
     return;
   }
-  const QPointF offset = m_cursorPosition - m_anchorPosition;
-  m_visual->update(m_cursorPosition, m_engine.directionForOffset(offset),
-                   cursorScale());
+  m_visual->setAppearance(m_config->glyphStyle(), anchorSize());
+  m_visual->update(cursorScale());
+}
+
+qreal AutoScrollEffect::anchorSize() const {
+  const QPointF position = m_session.isActive() ? m_anchorPosition
+                                               : KWin::input()->globalPointer();
+  if (auto *output = KWin::effects->screenAt(position.toPoint())) {
+    return screenRelativeGlyphSize(m_config->glyphSize(), output->geometry().size());
+  }
+  return normalizedGlyphSize(m_config->glyphSize());
 }
 
 qreal AutoScrollEffect::cursorScale() const {
-  if (auto *output = KWin::effects->screenAt(m_cursorPosition.toPoint())) {
+  const QPointF position = m_session.isActive() ? m_anchorPosition
+                                               : KWin::input()->globalPointer();
+  if (auto *output = KWin::effects->screenAt(position.toPoint())) {
     return output->scale();
   }
   return 1.0;

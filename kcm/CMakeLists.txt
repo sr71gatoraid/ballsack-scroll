@@ -39,16 +39,16 @@ kconfig_add_kcfg_files(autoscroll_kcm_sources
     "${CMAKE_CURRENT_SOURCE_DIR}/../config/autoscrollconfig.kcfgc"
 )
 
-kcoreaddons_add_plugin(kwin_autoscroll_config
+kcoreaddons_add_plugin(kwin_smoothautoscroll_config
     SOURCES ${autoscroll_kcm_sources}
     INSTALL_NAMESPACE "kwin/effects/configs"
 )
 
-target_compile_definitions(kwin_autoscroll_config PRIVATE
+target_compile_definitions(kwin_smoothautoscroll_config PRIVATE
     -DTRANSLATION_DOMAIN=\"kwin_autoscroll\"
 )
 
-target_link_libraries(kwin_autoscroll_config PRIVATE
+target_link_libraries(kwin_smoothautoscroll_config PRIVATE
     autoscroll_kcm_widgets
     KF6::ConfigGui
     KF6::ConfigWidgets

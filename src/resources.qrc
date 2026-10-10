@@ -4,6 +4,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
 -->
 <RCC>
     <qresource prefix="/autoscroll">
+        <file alias="styles/user-anchor/anchor.svg">assets/user-anchor.svg</file>
         <file alias="styles/breeze-dark/anchor.svg">assets/breeze-dark-anchor.svg</file>
         <file alias="styles/breeze-dark/direction.svg">assets/breeze-dark-direction.svg</file>
         <file alias="styles/breeze/anchor.svg">assets/breeze-anchor.svg</file>

@@ -46,11 +46,12 @@ SPDX-License-Identifier: GPL-2.0-or-later
      <item row="1" column="1">
       <widget class="QComboBox" name="kcfg_ActivationBehavior">
        <property name="toolTip">
-        <string>Combined mode toggles after a click, but stops on release when the pointer leaves the dead zone while the middle button is held.</string>
+        <string>Preserve normal clicks passes quick middle clicks to the application. Holding for 220 ms or moving beyond the dead zone starts scrolling; releasing stops it. Click-to-toggle and combined modes reserve ordinary middle clicks for scrolling.</string>
        </property>
        <item><property name="text"><string>Click to toggle</string></property></item>
        <item><property name="text"><string>Hold to scroll</string></property></item>
        <item><property name="text"><string>Click or hold (Windows-style)</string></property></item>
+       <item><property name="text"><string>Preserve normal clicks; hold to scroll</string></property></item>
       </widget>
      </item>
      <item row="2" column="0">
@@ -116,7 +117,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
    </item>
    <item>
     <widget class="QCheckBox" name="kcfg_VisualFeedback">
-     <property name="text"><string>Show the anchor and directional cursor</string></property>
+     <property name="text"><string>Show the anchor (keep the normal mouse pointer)</string></property>
     </widget>
    </item>
    <item>

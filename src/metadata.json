@@ -6,12 +6,12 @@
             }
         ],
         "Category": "Accessibility",
-        "Description": "Windows-style continuous scrolling activated with a middle click",
+        "Description": "Smooth middle-button hold scrolling with native clicks and a free pointer",
         "EnabledByDefault": false,
         "License": "GPL-2.0-or-later",
-        "Name": "Auto Scroll",
-        "Version": "0.1.7"
+        "Name": "Smooth Autoscroll",
+        "Version": "0.1.0"
     },
-    "X-DocPath": "https://github.com/elecxyz/Kwin_AutoScroll",
-    "X-KDE-ConfigModule": "kwin_autoscroll_config"
+    "X-DocPath": "https://github.com/sr71gatoraid/kwin-smooth-autoscroll",
+    "X-KDE-ConfigModule": "kwin_smoothautoscroll_config"
 }

@@ -1,0 +1,33 @@
+name: Arch package
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - name: Install declared build and runtime dependencies
+        run: >-
+          pacman -Syu --noconfirm --needed git python cmake ninja
+          extra-cmake-modules kwin qt6-svg kconfigwidgets kcmutils ki18n
+          kwidgetsaddons vulkan-headers appstream namcap
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build checksum-verified source package as an ordinary user
+        run: |
+          useradd --create-home builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          runuser -u builder -- bash -c '
+            set -euo pipefail
+            cd "$GITHUB_WORKSPACE"
+            python scripts/make-source-release.py
+            export SRCDEST="$GITHUB_WORKSPACE/dist"
+            export PKGDEST="$GITHUB_WORKSPACE/dist"
+            export BUILDDIR="$GITHUB_WORKSPACE/build-aur"
+            cd dist/aur
+            makepkg --cleanbuild --noconfirm
+            namcap PKGBUILD "$PKGDEST"/kwin-smooth-autoscroll-*.pkg.tar.zst
+          '

@@ -4,6 +4,7 @@
 #pragma once
 
 #include <QImage>
+#include <QSizeF>
 #include <QString>
 #include <QStringView>
 
@@ -22,12 +23,13 @@ struct GlyphStyle {
   const char *directionResource;
 };
 
-const std::array<GlyphStyle, 7> &glyphStyles();
+const std::array<GlyphStyle, 8> &glyphStyles();
 const GlyphStyle &glyphStyle(QStringView id);
 QString normalizedGlyphStyleId(QStringView id);
 
-const std::array<int, 8> &glyphSizePresets();
+const std::array<int, 9> &glyphSizePresets();
 int normalizedGlyphSize(int size);
+qreal screenRelativeGlyphSize(int size, const QSizeF &screenSize);
 
 QImage renderGlyph(QStringView styleId, GlyphElement element, qreal logicalSize,
                    qreal scale, qreal rotation = 0.0);

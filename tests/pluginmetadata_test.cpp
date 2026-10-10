@@ -31,13 +31,13 @@ void PluginMetadataTest::effectMetadata() {
   const QJsonObject plugin =
       metadata.value(QStringLiteral("KPlugin")).toObject();
   QCOMPARE(QFileInfo(QStringLiteral(AUTOSCROLL_EFFECT_PATH)).completeBaseName(),
-           QStringLiteral("autoscroll"));
+           QStringLiteral("smoothautoscroll"));
   QVERIFY(!plugin.contains(QStringLiteral("Id")));
   QCOMPARE(plugin.value(QStringLiteral("EnabledByDefault")).toBool(), false);
   QCOMPARE(plugin.value(QStringLiteral("Version")).toString(),
            QStringLiteral(AUTOSCROLL_PROJECT_VERSION));
   QCOMPARE(metadata.value(QStringLiteral("X-DocPath")).toString(),
-           QStringLiteral("https://github.com/elecxyz/Kwin_AutoScroll"));
+           QStringLiteral("https://github.com/sr71gatoraid/kwin-smooth-autoscroll"));
 }
 
 void PluginMetadataTest::kcmMetadata() {
@@ -53,13 +53,13 @@ void PluginMetadataTest::kcmMetadata() {
   QCOMPARE(plugin.value(QStringLiteral("Version")).toString(),
            QStringLiteral(AUTOSCROLL_PROJECT_VERSION));
   QCOMPARE(metadata.value(QStringLiteral("X-DocPath")).toString(),
-           QStringLiteral("https://github.com/elecxyz/Kwin_AutoScroll"));
+           QStringLiteral("https://github.com/sr71gatoraid/kwin-smooth-autoscroll"));
 }
 
 void PluginMetadataTest::supportedKWinFloor() {
   const QVersionNumber buildKWin =
       QVersionNumber::fromString(QStringLiteral(KWIN_PLUGIN_VERSION_STRING));
-  QVERIFY2(buildKWin >= QVersionNumber(6, 4, 3),
+  QVERIFY2(buildKWin >= QVersionNumber(6, 7, 5),
            "The build root contains a KWin older than the supported floor");
 }
 

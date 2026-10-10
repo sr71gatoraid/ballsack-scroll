@@ -30,7 +30,7 @@ private Q_SLOTS:
 
 void GlyphSelectorsTest::styleSelectorUsesStableIds() {
   GlyphStyleComboBox selector;
-  QCOMPARE(selector.count(), 7);
+  QCOMPARE(selector.count(), 8);
   QCOMPARE(QString::fromLatin1(selector.metaObject()->userProperty().name()),
            QStringLiteral("glyphStyle"));
 
@@ -38,7 +38,7 @@ void GlyphSelectorsTest::styleSelectorUsesStableIds() {
       QStringLiteral("breeze-dark"), QStringLiteral("breeze"),
       QStringLiteral("classic"),     QStringLiteral("feather"),
       QStringLiteral("orbit"),       QStringLiteral("circuit"),
-      QStringLiteral("pulse")};
+      QStringLiteral("pulse"), QStringLiteral("user-anchor")};
   QStringList actual;
   for (int index = 0; index < selector.count(); ++index) {
     actual.append(selector.itemData(index).toString());
@@ -55,11 +55,11 @@ void GlyphSelectorsTest::styleSelectorUsesStableIds() {
 
 void GlyphSelectorsTest::sizeSelectorUsesPresets() {
   GlyphSizeComboBox selector;
-  QCOMPARE(selector.count(), 8);
+  QCOMPARE(selector.count(), 9);
   QCOMPARE(QString::fromLatin1(selector.metaObject()->userProperty().name()),
            QStringLiteral("glyphSize"));
 
-  const QList<int> expected{16, 24, 32, 40, 48, 56, 64, 72};
+  const QList<int> expected{16, 24, 30, 32, 40, 48, 56, 64, 72};
   QList<int> actual;
   for (int index = 0; index < selector.count(); ++index) {
     actual.append(selector.itemData(index).toInt());
@@ -105,7 +105,7 @@ void GlyphSelectorsTest::initiationAndExclusionControlsUseExpectedLayout() {
   QCOMPARE(row, 1);
   QCOMPARE(role, QFormLayout::FieldRole);
   QCOMPARE(ui.activationBehaviorLabel->buddy(), ui.kcfg_ActivationBehavior);
-  QCOMPARE(ui.kcfg_ActivationBehavior->count(), 3);
+  QCOMPARE(ui.kcfg_ActivationBehavior->count(), 4);
   QVERIFY(ui.verticalLayout->indexOf(ui.excludedApplicationsGroupBox) <
           ui.verticalLayout->indexOf(ui.kcfg_VisualFeedback));
 }
@@ -178,11 +178,11 @@ void GlyphSelectorsTest::kconfigDialogManagerBindsProperties() {
            QStringList({QStringLiteral("class:gamescope")}));
 
   manager.updateWidgetsDefault();
-  QCOMPARE(ui.kcfg_GlyphStyle->glyphStyle(), QStringLiteral("breeze-dark"));
-  QCOMPARE(ui.kcfg_GlyphSize->glyphSize(), 40);
+  QCOMPARE(ui.kcfg_GlyphStyle->glyphStyle(), QStringLiteral("user-anchor"));
+  QCOMPARE(ui.kcfg_GlyphSize->glyphSize(), 30);
   QVERIFY(ui.appearanceGroupBox->isEnabled());
   QCOMPARE(ui.kcfg_ActivationBehavior->currentIndex(),
-           AutoScrollConfig::EnumActivationBehavior::Toggle);
+           AutoScrollConfig::EnumActivationBehavior::PreserveClicks);
   QVERIFY(ui.kcfg_ExcludedApplications->excludedApplications().isEmpty());
 }
 

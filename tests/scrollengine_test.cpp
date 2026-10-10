@@ -17,20 +17,56 @@ private Q_SLOTS:
   void directionAndMagnitude();
   void maximumSpeedIsCapped();
   void elapsedTimeScalesDelta();
+  void speedRampsSmoothly();
+  void reversalHasNoWrongWayCoasting();
+  void resetClearsVelocity();
   void diagonalAxesAreIndependent();
   void horizontalCanBeDisabled();
   void axisStopIsEmittedOnce();
   void directionClassification();
   void lowSpeedConfigurationRemainsActive();
+  void smallTurnFromHorizontalStartsVertical();
+  void circularDeadZoneHasNoAxisBands();
+  void diagonalSpeedIsCappedAsVector();
 };
 
 void ScrollEngineTest::deadZoneProducesNoMovement() {
   ScrollEngine engine;
-  const ScrollFrame frame = engine.advance(QPointF(24, -24), 0.01);
+  const ScrollFrame frame = engine.advance(QPointF(16, -16), 0.01);
   QVERIFY(!frame.horizontalActive);
   QVERIFY(!frame.verticalActive);
   QCOMPARE(frame.horizontalDelta, 0.0);
   QCOMPARE(frame.verticalDelta, 0.0);
+}
+
+void ScrollEngineTest::smallTurnFromHorizontalStartsVertical() {
+  ScrollEngine engine;
+  for (int i = 0; i < 50; ++i)
+    engine.advance(QPointF(200, 0), 0.008);
+  const auto turned = engine.advance(QPointF(200, 12), 0.008);
+  QVERIFY(turned.horizontalActive);
+  QVERIFY(turned.verticalActive);
+  QVERIFY(turned.verticalDelta > 0);
+  QVERIFY(turned.horizontalDelta > turned.verticalDelta);
+}
+
+void ScrollEngineTest::circularDeadZoneHasNoAxisBands() {
+  ScrollEngine engine;
+  QVERIFY(!engine.advance(QPointF(24, 0), 0.008).horizontalActive);
+  const auto frame = engine.advance(QPointF(20, 20), 0.008);
+  QVERIFY(frame.horizontalActive);
+  QVERIFY(frame.verticalActive);
+  QCOMPARE(frame.horizontalDelta, frame.verticalDelta);
+}
+
+void ScrollEngineTest::diagonalSpeedIsCappedAsVector() {
+  ScrollEngine engine;
+  ScrollFrame frame;
+  for (int i = 0; i < 250; ++i)
+    frame = engine.advance(QPointF(10000, 10000), 0.008);
+  const qreal speed = std::hypot(frame.horizontalDelta, frame.verticalDelta) / 0.008;
+  QVERIFY(speed <= engine.settings().maximumSpeed + 1e-8);
+  QVERIFY(speed > engine.settings().maximumSpeed - 1e-6);
 }
 
 void ScrollEngineTest::directionAndMagnitude() {
@@ -49,11 +85,47 @@ void ScrollEngineTest::maximumSpeedIsCapped() {
 }
 
 void ScrollEngineTest::elapsedTimeScalesDelta() {
+  // A constant offset over one second must travel the same distance at
+  // 50 Hz and 125 Hz. This catches timer-dependent smoothing.
+  ScrollEngine slow;
+  ScrollEngine fast;
+  qreal slowDistance = 0;
+  qreal fastDistance = 0;
+  for (int i = 0; i < 50; ++i)
+    slowDistance += slow.advance(QPointF(0, 100), 0.020).verticalDelta;
+  for (int i = 0; i < 125; ++i)
+    fastDistance += fast.advance(QPointF(0, 100), 0.008).verticalDelta;
+  QVERIFY(std::abs(slowDistance - fastDistance) < 1e-8);
+  QVERIFY(slowDistance > 0);
+}
+
+void ScrollEngineTest::speedRampsSmoothly() {
   ScrollEngine engine;
-  const ScrollFrame shortFrame = engine.advance(QPointF(0, 100), 0.01);
-  engine.reset();
-  const ScrollFrame longFrame = engine.advance(QPointF(0, 100), 0.02);
-  QCOMPARE(longFrame.verticalDelta, shortFrame.verticalDelta * 2.0);
+  const qreal first = engine.advance(QPointF(0, 160), 0.008).verticalDelta;
+  const qreal second = engine.advance(QPointF(0, 160), 0.008).verticalDelta;
+  QVERIFY(first > 0);
+  QVERIFY(second > first);
+  QVERIFY(second < engine.speedForOffset(160) * 0.008);
+  const auto stopped = engine.advance(QPointF(0, 24), 0.008);
+  QCOMPARE(stopped.verticalDelta, 0.0);
+  QVERIFY(stopped.verticalStopped);
+}
+
+void ScrollEngineTest::reversalHasNoWrongWayCoasting() {
+  ScrollEngine engine;
+  for (int i = 0; i < 50; ++i)
+    engine.advance(QPointF(0, 160), 0.008);
+  QVERIFY(engine.advance(QPointF(0, -160), 0.008).verticalDelta < 0);
+}
+
+void ScrollEngineTest::resetClearsVelocity() {
+  ScrollEngine engine;
+  for (int i = 0; i < 50; ++i)
+    engine.advance(QPointF(0, 160), 0.008);
+  engine.stop();
+  ScrollEngine fresh;
+  QCOMPARE(engine.advance(QPointF(0, 160), 0.008).verticalDelta,
+           fresh.advance(QPointF(0, 160), 0.008).verticalDelta);
 }
 
 void ScrollEngineTest::diagonalAxesAreIndependent() {
@@ -110,7 +182,7 @@ void ScrollEngineTest::lowSpeedConfigurationRemainsActive() {
 
   const ScrollFrame frame = engine.advance(QPointF(0, 100), 0.008);
   QVERIFY(frame.verticalActive);
-  QVERIFY(frame.verticalDelta > 2.0);
+  QVERIFY(frame.verticalDelta > 0.0);
   QVERIFY(frame.verticalDelta < 3.0);
 }
 

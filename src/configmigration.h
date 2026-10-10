@@ -9,7 +9,7 @@
 namespace AutoScroll {
 
 inline void migrateActivationBehavior(const KSharedConfig::Ptr &config) {
-  KConfigGroup group(config, QStringLiteral("Effect-autoscroll"));
+  KConfigGroup group(config, QStringLiteral("Effect-smoothautoscroll"));
   const QString legacyKey = QStringLiteral("HoldToScroll");
   if (group.hasKey(QStringLiteral("ActivationBehavior"))) {
     if (group.hasKey(legacyKey)) {

@@ -1,0 +1,40 @@
+# Maintainer: sr71gatoraid (https://github.com/sr71gatoraid)
+# SPDX-License-Identifier: GPL-2.0-or-later
+pkgname=kwin-smooth-autoscroll
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc='Smooth middle-button hold scrolling for KDE Wayland with native clicks and a free pointer'
+arch=('x86_64')
+url='https://github.com/sr71gatoraid/kwin-smooth-autoscroll'
+license=('GPL-2.0-or-later')
+depends=('kwin>=6.7.5' 'libstdc++' 'glibc' 'kcmutils' 'kconfig'
+         'kcoreaddons' 'ki18n'
+         'qt6-base' 'qt6-svg')
+makedepends=('cmake' 'extra-cmake-modules' 'ninja' 'vulkan-headers'
+             'kconfigwidgets' 'kwidgetsaddons')
+checkdepends=('appstream')
+install=kwin-smooth-autoscroll.install
+source=("${pkgname}-${pkgver}.tar.xz::${url}/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.xz")
+sha256sums=('@SHA256@')
+
+build() {
+  cmake -S "${pkgname}-${pkgver}" -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DBUILD_TESTING=ON
+  cmake --build build
+}
+
+check() {
+  ctest --test-dir build --output-on-failure
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build
+  install -Dm644 "${pkgname}-${pkgver}/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 "${pkgname}-${pkgver}/README.md" \
+    "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+  install -Dm644 "${pkgname}-${pkgver}/CHANGELOG.md" \
+    "${pkgdir}/usr/share/doc/${pkgname}/CHANGELOG.md"
+}

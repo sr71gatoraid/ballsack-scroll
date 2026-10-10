@@ -1,0 +1,13 @@
+post_install() {
+  printf '%s\n' \
+    'Smooth Autoscroll: log out and back in, then enable it in System Settings > Window Management > Desktop Effects.' \
+    'Quick middle clicks retain their native action; hold for 220 ms or drag to scroll, release to stop.' \
+    'Disable any conflicting mouse setting that uses a held middle button for scrolling.' \
+    'Rebuild this package after KWin upgrades; compiled effects must match the installed KWin version.'
+}
+
+post_upgrade() {
+  printf '%s\n' \
+    'Smooth Autoscroll updated. Log out and back in to load the new library.' \
+    'Rebuild this package after KWin upgrades.'
+}

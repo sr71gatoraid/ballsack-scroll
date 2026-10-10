@@ -43,7 +43,7 @@ void AutoScrollEffectConfig::save() {
       QStringLiteral("org.kde.KWin"), QStringLiteral("/Effects"),
       QStringLiteral("org.kde.kwin.Effects"),
       QStringLiteral("reconfigureEffect"));
-  message << QStringLiteral("autoscroll");
+  message << QStringLiteral("smoothautoscroll");
   QDBusConnection::sessionBus().asyncCall(message);
 }
 

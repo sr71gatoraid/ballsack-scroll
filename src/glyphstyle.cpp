@@ -12,7 +12,7 @@
 
 namespace AutoScroll {
 namespace {
-constexpr std::array<GlyphStyle, 7> Styles{{
+constexpr std::array<GlyphStyle, 8> Styles{{
     {"breeze-dark", ":/autoscroll/styles/breeze-dark/anchor.svg",
      ":/autoscroll/styles/breeze-dark/direction.svg"},
     {"breeze", ":/autoscroll/styles/breeze/anchor.svg",
@@ -27,12 +27,14 @@ constexpr std::array<GlyphStyle, 7> Styles{{
      ":/autoscroll/styles/circuit/direction.svg"},
     {"pulse", ":/autoscroll/styles/pulse/anchor.svg",
      ":/autoscroll/styles/pulse/direction.svg"},
+    {"user-anchor", ":/autoscroll/styles/user-anchor/anchor.svg",
+     ":/autoscroll/styles/user-anchor/anchor.svg"},
 }};
 
-constexpr std::array<int, 8> SizePresets{{16, 24, 32, 40, 48, 56, 64, 72}};
+constexpr std::array<int, 9> SizePresets{{16, 24, 30, 32, 40, 48, 56, 64, 72}};
 } // namespace
 
-const std::array<GlyphStyle, 7> &glyphStyles() { return Styles; }
+const std::array<GlyphStyle, 8> &glyphStyles() { return Styles; }
 
 const GlyphStyle &glyphStyle(QStringView id) {
   const auto found = std::find_if(Styles.cbegin(), Styles.cend(),
@@ -46,7 +48,7 @@ QString normalizedGlyphStyleId(QStringView id) {
   return QString::fromLatin1(glyphStyle(id).id);
 }
 
-const std::array<int, 8> &glyphSizePresets() { return SizePresets; }
+const std::array<int, 9> &glyphSizePresets() { return SizePresets; }
 
 int normalizedGlyphSize(int size) {
   const auto closest = std::min_element(
@@ -60,6 +62,15 @@ int normalizedGlyphSize(int size) {
         return leftDistance < rightDistance;
       });
   return closest == SizePresets.cend() ? 40 : *closest;
+}
+
+qreal screenRelativeGlyphSize(int size, const QSizeF &screenSize) {
+  // Sizes are expressed relative to a screen with a 1440-unit short edge.
+  // Using logical geometry also accounts for the output's display scaling.
+  const qreal shortEdge = std::min(screenSize.width(), screenSize.height());
+  const qreal baseSize = normalizedGlyphSize(size);
+  return shortEdge > 0 ? std::max(1.0, baseSize * shortEdge / 1440.0)
+                       : baseSize;
 }
 
 QImage renderGlyph(QStringView styleId, GlyphElement element, qreal logicalSize,
@@ -77,18 +88,13 @@ QImage renderGlyph(QStringView styleId, GlyphElement element, qreal logicalSize,
                QImage::Format_ARGB32_Premultiplied);
   image.fill(Qt::transparent);
 
-  QSvgRenderer renderer(resource);
-  if (!renderer.isValid()) {
-    image.setDevicePixelRatio(boundedScale);
-    return image;
-  }
-
   QPainter painter(&image);
   painter.setRenderHint(QPainter::Antialiasing);
   painter.setRenderHint(QPainter::SmoothPixmapTransform);
   painter.translate(pixelSize / 2.0, pixelSize / 2.0);
   painter.rotate(rotation);
   painter.translate(-pixelSize / 2.0, -pixelSize / 2.0);
+  QSvgRenderer renderer(resource);
   renderer.render(&painter, QRectF(0, 0, pixelSize, pixelSize));
   painter.end();
 

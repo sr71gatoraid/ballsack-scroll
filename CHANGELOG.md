@@ -1,94 +1,16 @@
 # Changelog
 
-All notable changes to this project will be documented here.
+## 0.1.0 — first public preview
 
-## 0.1.7 — 2026-09-24
+- Preserve native quick middle clicks without requiring modifiers.
+- Hold or middle-drag to scroll; release or Escape to stop.
+- Keep the real pointer free and visible while scroll events remain at the
+  activation point, including across sidebars and window boundaries.
+- Blend both axes through a circular dead zone, with smooth acceleration and
+  immediate stopping and direction reversal.
+- Add authored SVG artwork with a translucent grey disc and a subtle gleam.
+- Scale the anchor relative to its screen; default to 30 pixels on 1440p.
+- Provide a stable plugin ID, reproducible source archive, Arch package recipe,
+  checksums, AUR metadata, and isolated runtime regressions.
 
-- Rebuilt the CachyOS and Fedora 44 packages against KWin 6.7.5, the SteamOS
-  package against Valve KWin 6.4.3-1.16, and the Kubuntu 26.04 package against
-  KWin 6.6.6.
-- Refreshed locked build environments and corrected the source archive to
-  include the target definitions and package lock files.
-- No change to AutoScroll's activation behavior from 0.1.6.
-
-## 0.1.6 — 2026-08-22
-
-- Added a third, Windows-style combined activation mode: release within the
-  dead zone to keep scrolling toggled, or move outside the dead zone while
-  holding the middle button and release it to stop.
-- Preserved the original click-to-toggle and hold-to-scroll modes as separate
-  choices.
-- Migrated existing hold-to-scroll preferences to the new three-mode setting
-  without changing their behavior.
-- Added a Fedora 44 RPM and source RPM built against KWin `6.7.4-2.fc44`, with
-  locked dependencies, RPM linting, and disposable installation verification.
-- Refreshed the CachyOS and Fedora packages for KWin 6.7.5 and the SteamOS
-  package for Valve's `6.4.3-1.16` build.
-
-## 0.1.5 — 2026-08-03
-
-- Added an application exclusion list with a KWin running-window picker and a
-  searchable installed-application chooser.
-- Allowed excluded applications to receive their normal middle-click input
-  without AutoScroll glyphs or generated scrolling.
-- Added optional click-and-hold activation while preserving click-to-toggle as
-  the default.
-- Made modified hold activation wait for modifier release, preventing
-  generated scrolling from becoming a modified-wheel action.
-- Released the `0.1.5-2` packaging hotfix with unversioned KWin runtime
-  dependencies so AutoScroll cannot block desktop or operating-system updates.
-
-## 0.1.4 — 2026-07-30
-
-- Added a KDE-style size picker for scaling the anchor and directional glyphs
-  together with a 40-pixel default.
-- Added Breeze Dark, Breeze, Classic, Feather, Orbit, Circuit, and Pulse
-  visual styles with matching configuration previews. Breeze Dark is the
-  default.
-- Applied visual style and size changes immediately.
-- Added shared rendering, configuration, resource, and selector tests for the
-  new visual system.
-
-## 0.1.3 — 2026-07-30
-
-- Added an optional Control, Meta, Alt, or Shift modifier for middle-click
-  activation, allowing plain middle-click behavior to remain available to
-  browsers and other applications.
-- Delayed generated scrolling until the complete activation chord is released
-  so modifier-sensitive wheel actions such as zoom are not triggered.
-- Required two physical wheel events to cancel an active session, preventing a
-  single accidental wheel detent from stopping AutoScroll.
-- Kept unmodified middle-click activation as the default for existing users.
-
-## 0.1.2 — 2026-07-29
-
-- Expanded the supported build range to KWin 6.4.3 and newer while retaining
-  exact-patch binary packages for every KWin target.
-- Made output-scale lookup compatible with the `Output *` return type used by
-  KWin 6.4/6.5 and the `LogicalOutput *` return type used by KWin 6.6 and
-  newer.
-- Fixed missing anchor and direction glyphs on KWin 6.4-6.6 by asking the
-  active scene renderer to create its backend-specific image items. KWin 6.7
-  and newer continue to use the unified image item directly.
-- Added isolated CachyOS, SteamOS 6.4.3, and Kubuntu 26.04 package builds with
-  version, plugin-IID, linkage, contents, package-manager, and linter checks.
-- Added locked target package manifests and reproducible, byte-stable release
-  artifacts without changing the existing compositor input-filter behavior.
-
-## 0.1.1 — 2026-07-27
-
-- Fixed glyph rendering on scaled displays.
-
-## 0.1.0 — 2026-07-25
-
-- Initial Plasma 6.7 Wayland implementation.
-- Middle-click activation with distance-based vertical and horizontal scrolling.
-- Windows-like cancellation and safe input-pair suppression.
-- DPI-aware anchor and eight-direction cursor feedback.
-- Desktop Effects configuration module.
-- Reliable live configuration reloads, including acceleration exponents below
-  1.0.
-- Gentle defaults: a 24-unit dead zone, 800 units/second maximum speed, and a
-  1.6 acceleration exponent.
-- Automated engine, state-machine, activation-policy, and plugin-metadata tests.
-- Arch/CachyOS and Debian-family Plasma packaging.
+Forked from KWin AutoScroll 0.1.7. This version starts a separate release series.

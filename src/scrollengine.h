@@ -10,7 +10,7 @@ namespace AutoScroll {
 struct ScrollSettings {
   qreal deadZone = 24.0;
   qreal maximumSpeed = 800.0;
-  qreal accelerationExponent = 1.6;
+  qreal accelerationExponent = 2.2;
   bool horizontalScrolling = true;
 };
 
@@ -51,6 +51,8 @@ public:
 
 private:
   ScrollSettings m_settings;
+  qreal m_horizontalSpeed = 0.0;
+  qreal m_verticalSpeed = 0.0;
   bool m_horizontalWasActive = false;
   bool m_verticalWasActive = false;
 };

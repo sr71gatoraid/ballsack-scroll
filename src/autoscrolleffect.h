@@ -21,6 +21,7 @@
 namespace KWin {
 class InputDevice;
 class Window;
+class SurfaceInterface;
 struct KeyboardKeyEvent;
 struct PointerAxisEvent;
 struct PointerButtonEvent;
@@ -55,6 +56,7 @@ public:
   ~AutoScrollEffect() override;
 
   bool isActive() const override;
+  QString debug(const QString &parameter) const override;
   void reconfigure(ReconfigureFlags flags) override;
 
   bool handlePointerMotion(KWin::PointerMotionEvent *event);
@@ -69,13 +71,18 @@ private:
   bool isWindowExcluded(KWin::Window *window) const;
   bool isStillOnTarget() const;
   void activate(KWin::Window *window, const QPointF &position,
-                Qt::KeyboardModifier activationModifier);
+                Qt::KeyboardModifier activationModifier,
+                ActivationMode activationMode);
+  void activatePendingHold();
+  void clearPendingClick(bool suppressRelease = true);
+  bool replayPendingClick(KWin::PointerButtonEvent *release);
   void updateSessionModifiers(Qt::KeyboardModifiers modifiers);
   void startScrolling();
   void cancelSession();
   void scrollTick();
   void emitFrame(const ScrollFrame &frame);
   void updateVisual();
+  qreal anchorSize() const;
   qreal cursorScale() const;
   static std::chrono::microseconds currentTimestamp();
 
@@ -86,14 +93,19 @@ private:
   std::unique_ptr<AutoScrollInputFilter> m_inputFilter;
   std::unique_ptr<AutoScrollVisual> m_visual;
   QPointer<KWin::Window> m_targetWindow;
+  QPointer<KWin::SurfaceInterface> m_targetSurface;
   QMetaObject::Connection m_targetDestroyedConnection;
   QPointF m_anchorPosition;
   QPointF m_cursorPosition;
   QTimer m_scrollTimer;
+  QTimer m_holdTimer;
+  std::unique_ptr<KWin::PointerButtonEvent> m_pendingPress;
+  QPointer<KWin::Window> m_pendingWindow;
+  bool m_replayingClick = false;
+  bool m_suppressPendingRelease = false;
   QElapsedTimer m_elapsedTimer;
   bool m_visualFeedback = true;
-  bool m_cursorHidden = false;
-  ActivationMode m_activationMode = ActivationMode::Toggle;
+  ActivationMode m_activationMode = ActivationMode::PreserveClicks;
   QStringList m_excludedApplications;
 };
 

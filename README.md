@@ -1,219 +1,102 @@
-# KWin AutoScroll
+# Smooth Autoscroll
 
-Kwin AutoScroll attempts to recreate the auto scrolling functionality of Windows plus a few extra nice-to-haves.
+Smooth, directional middle-button scrolling for **KDE Plasma on Wayland**.
+Hold the middle button, move the pointer away from the four-arrow anchor, and
+scroll faster as you move farther away. Release to stop.
 
-Middle-click in an application, move the pointer away from the anchor, and the
-distance and direction control the scrolling speed. Move back into the dead
-zone to pause, or click again to stop.
+Quick middle clicks keep their normal actions, including closing tabs and opening
+links. No modifier is required. The real pointer remains visible and free;
+scrolling stays at its original target even across sidebars and window edges.
 
-<p align="center">
-  <img
-    src="https://github.com/user-attachments/assets/e8c63462-66ae-4c92-ac35-2cb60e1c6927"
-    width="560"
-    align="top"
-    alt="Auto Scroll configuration"
-  />
-  <img
-    src="https://github.com/user-attachments/assets/ecff29ac-7647-445e-8ff1-37c6e1a763a0"
-    width="227"
-    align="top"
-    alt="Pointer style menu"
-  />
-</p>
+The anchor is SVG artwork with charcoal arrows, a translucent grey disc, and a
+subtle gleam. Its default diameter is 30 pixels on a 1440p screen and scales with
+the screen's shorter side, accounting for KDE display scaling.
 
-[auto_scroll_demo.webm](https://github.com/user-attachments/assets/aba74c5e-aab9-4371-84ad-fe67e5321b36)
+## Compatibility
 
-## Install
+The first public preview targets KWin **6.7.5 or newer** and is tested on Arch
+Linux with KWin 6.7.5 and Qt 6.12. Native Wayland applications work best.
+XWayland compatibility is best effort. GNOME, other compositors, and Plasma X11
+are not supported. New KWin releases may require source changes.
 
-Download the package for your system from the release's **Assets** section.
-The package must match your exact KWin patch version—KWin effects are not
-universal binaries.
+Compiled KWin effects must match the installed KWin plugin ABI. **Rebuild after
+KWin updates**, then log out and back in. The package deliberately does not pin
+KWin to an exact version or prevent desktop updates.
 
-Check the installed package before choosing an asset:
+## Install on Arch Linux
+
+The package name is `kwin-smooth-autoscroll`. AUR publication is pending for the
+first release; the instructions below become usable once it is published:
 
 ```sh
-pacman -Q kwin                  # CachyOS or SteamOS
-dpkg-query -W kwin-wayland     # Kubuntu
-rpm -q kwin                     # Fedora KDE
+git clone https://aur.archlinux.org/kwin-smooth-autoscroll.git
+cd kwin-smooth-autoscroll
+makepkg -si
 ```
 
-The package-manager dependency is intentionally unversioned so AutoScroll
-cannot block a KWin or operating-system update. If an update changes KWin,
-install the newly matched AutoScroll build before enabling the effect again.
+A release `.pkg.tar.zst` can also be installed with `sudo pacman -U`, provided its
+KWin ABI matches your installed version. Matching source is included in every
+release.
 
-### CachyOS
+After installation, log out and back in. Open **System Settings → Window
+Management → Desktop Effects**, enable **Smooth Autoscroll**, and use its
+Configure button to adjust speed, dead zone, appearance, and excluded apps.
 
-For the current CachyOS KWin 6.7.5-1.1 package:
+If your mouse has a separate “hold middle button to scroll” setting, disable it
+so it does not consume the gesture or lock the pointer. This package does not
+change mouse, clipboard, or primary-selection settings automatically.
+
+## Build on other KDE distributions
+
+Install a C++20 compiler, CMake, Ninja, Extra CMake Modules, Qt 6 development
+packages (Core, DBus, Gui, Svg, Widgets, Test), KDE Frameworks 6 development
+packages (Config, ConfigWidgets, CoreAddons, I18n, KCMUtils, WidgetsAddons),
+KWin development headers, and Vulkan headers. Package names vary by distribution.
 
 ```sh
-sudo pacman -U ./kwin-autoscroll-0.1.7-1-cachyos-kwin6.7.5-1.1-x86_64.pkg.tar.zst
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_TESTING=ON
+cmake --build build --parallel 4
+ctest --test-dir build --output-on-failure
+sudo cmake --install build
 ```
 
-Remove it with:
+Then log out and back in and enable the effect in System Settings. The stable
+plugin ID is `smoothautoscroll`; no session restart is attempted by the installer.
+
+## Use
+
+- A quick middle click goes to the application.
+- Hold for 220 ms, or move beyond the dead zone while holding, to start scrolling.
+- Distance controls speed; direction controls both axes smoothly.
+- Return to the anchor to pause immediately.
+- Release the middle button or press Escape to stop and remove the anchor.
+- Add applications to the exclusion list when their own middle-button gestures
+  should take precedence, including long holds and drags.
+
+The older toggle modes are optional settings. They consume ordinary middle
+clicks; the default hold mode preserves quick clicks.
+
+## Development and releases
+
+See [release instructions](docs/RELEASING.md) and
+[validation instructions](docs/TESTING.md). Build a source archive and
+checksum-verified AUR submission files with:
 
 ```sh
-sudo pacman -Rns kwin-autoscroll
+python scripts/make-source-release.py
 ```
 
-### SteamOS / Steam Deck
+Public project: https://github.com/sr71gatoraid/kwin-smooth-autoscroll
 
-This package is for Valve KWin 6.4.3-1.16:
+## Credits and license
 
-Warning for SteamOS: this effect has not been fully runtime-tested with
-Valve's input libraries or Steam Input. Use it with care.
+This is a fork of [KWin AutoScroll](https://github.com/elecxyz/Kwin_AutoScroll),
+starting from upstream commit `d488b82ac29cb54cffef26149727c2e15dbac6eb`.
+Upstream contributors provided the original effect, settings, and lifecycle.
+The fork adds native-click preservation, hold activation, smoother vector
+scrolling, original-target input routing, screen-relative SVG artwork, and
+release packaging. Upstream copyright notices are retained.
 
-```sh
-sudo steamos-readonly disable
-sudo pacman -U ./kwin-autoscroll-0.1.7-1-steamos-kwin6.4.3-1.16-x86_64.pkg.tar.zst
-sudo steamos-readonly enable
-```
-
-SteamOS systems still on KWin `6.4.3-1.13` should instead use the preserved
-`kwin-autoscroll-0.1.6-1-steamos-kwin6.4.3-1.13-x86_64.pkg.tar.zst` asset.
-
-Remove it with:
-
-```sh
-sudo steamos-readonly disable
-sudo pacman -Rns kwin-autoscroll
-sudo steamos-readonly enable
-```
-
-SteamOS normally keeps the system image read-only. System updates may remove
-the package, and an update that changes KWin will need a newly matched build.
-
-### Kubuntu 26.04
-
-This package is for KWin `4:6.6.6-0ubuntu0.1`:
-
-```sh
-sudo apt install ./kwin-autoscroll_0.1.7-1-kubuntu26.04-kwin6.6.6_amd64.deb
-```
-
-Kubuntu systems still on KWin `4:6.6.5-0ubuntu0.1` should instead use the
-preserved `kwin-autoscroll_0.1.6-1-kubuntu26.04-kwin6.6.5_amd64.deb` asset.
-
-Remove it with:
-
-```sh
-sudo apt remove kwin-autoscroll
-```
-
-### Fedora KDE 44
-
-This package is for Fedora 44 KWin `6.7.5-1.fc44`:
-
-```sh
-sudo dnf install ./kwin-autoscroll-0.1.7-1.fc44.x86_64.rpm
-```
-
-Remove it with:
-
-```sh
-sudo dnf remove kwin-autoscroll
-```
-
-Fedora Kinoite can layer the same RPM, followed by a reboot:
-
-```sh
-sudo rpm-ostree install ./kwin-autoscroll-0.1.7-1.fc44.x86_64.rpm
-systemctl reboot
-```
-
-## Turn it on
-
-After installing:
-
-1. Log out and back in.
-2. Open **System Settings → Window Management → Desktop Effects**.
-3. Find **Auto Scroll** under Accessibility.
-4. Enable it and click **Apply**.
-
-The configure button lets you choose an optional activation modifier and one
-of three activation behaviors: click to toggle, hold to scroll, or combined
-Windows-style click-or-hold. You can also select applications AutoScroll
-should leave untouched and adjust the dead zone, maximum speed, acceleration
-curve, horizontal scrolling, visual feedback, glyph size, and visual style.
-The size picker scales the anchor and directional pointer together. Breeze
-Dark is the default; Breeze, Classic, Feather, Orbit, Circuit, and Pulse
-remain available as bundled alternatives.
-
-## How it behaves
-
-- **Click to toggle** remains the default: release the middle button and click
-  again to stop. **Hold to scroll** stops whenever the middle button is
-  released.
-- **Click or hold (Windows-style)** keeps AutoScroll toggled when the middle
-  button is released inside the dead zone. Moving outside the dead zone while
-  holding changes that activation into a hold gesture, and releasing the
-  middle button then stops it. Returning to the dead zone does not change the
-  gesture back into a toggle.
-- Optionally require Control, Meta, Alt, or Shift while middle-clicking. With
-  a modifier selected, plain middle-click remains available for opening
-  browser links in a new tab, closing browser tabs, or middle-click paste.
-- In toggle mode with a modifier, release both the middle button and modifier
-  before moving the pointer. In hold mode, keep the middle button down and
-  release the modifier. Combined mode follows whichever gesture you perform.
-  All three modes avoid generating modifier-sensitive wheel actions such as
-  zoom.
-- Another click or Escape stops a toggled session immediately; releasing the
-  middle button stops hold and combined-hold gestures. The physical scroll
-  wheel needs two events, so one accidental detent does not stop AutoScroll.
-- Add applications to **Excluded applications** by selecting a running window
-  or choosing an installed application. Excluded applications receive normal
-  middle clicks and never receive AutoScroll-generated scrolling.
-- Leaving the original window also stops it, so another application does not
-  receive the generated scrolling.
-- Native Wayland applications work best. XWayland applications are best
-  effort, and a full Plasma X11 session is not supported.
-- While AutoScroll is available in non-excluded application content, that
-  middle click is reserved for the effect rather than middle-click paste or
-  open-link.
-
-## Building it yourself
-
-The repository can build separate packages for the four supported targets:
-
-Run the complete matrix from an up-to-date Arch-family host. The Arch targets
-use clean `devtools` chroots, while the Kubuntu and Fedora targets use rootless
-Podman:
-
-```sh
-sudo pacman -Syu --needed devtools namcap podman
-scripts/check-build-host.sh
-```
-
-The Arch builders use `sudo` to create and enter their isolated roots. The
-Kubuntu and Fedora builders do not require root.
-
-```sh
-scripts/build-target.sh cachyos
-scripts/build-target.sh steamos-6.4.3
-scripts/build-target.sh kubuntu-26.04
-scripts/build-target.sh fedora-44
-```
-
-Or build everything:
-
-```sh
-scripts/build-all.sh
-```
-
-Build roots, downloaded packages, reports, and finished artifacts are kept
-outside the repository under:
-
-```text
-~/.cache/kwin-autoscroll-builds/
-```
-
-Those downloads are reused on later builds, so unchanged target packages do
-not need to be fetched again.
-
-The detailed build setup is in [docs/BUILD_MATRIX.md](docs/BUILD_MATRIX.md).
-Testing notes are in [docs/TESTING.md](docs/TESTING.md), and the latest changes
-are in [docs/RELEASE_NOTES_0.1.7.md](docs/RELEASE_NOTES_0.1.7.md).
-
-## License
-
-KWin AutoScroll is licensed under GPL-2.0-or-later. The visual assets are
-original project artwork under the same license.
+Licensed **GPL-2.0-or-later**; see [LICENSE](LICENSE). The new SVG artwork is
+included under the same license. The original local reference PNG is not part
+of the distribution.

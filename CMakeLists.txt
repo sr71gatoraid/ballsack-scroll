@@ -3,11 +3,11 @@
 
 cmake_minimum_required(VERSION 3.24)
 
-project(kwin-autoscroll VERSION 0.1.7 LANGUAGES CXX)
+project(kwin-smooth-autoscroll VERSION 0.1.0 LANGUAGES CXX)
 
 set(QT_MIN_VERSION "6.7.0")
 set(KF_MIN_VERSION "6.0.0")
-set(KWIN_MIN_VERSION "6.4.3")
+set(KWIN_MIN_VERSION "6.7.5")
 
 find_package(ECM ${KF_MIN_VERSION} REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
@@ -44,21 +44,3 @@ if(BUILD_TESTING)
     find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS Test)
     add_subdirectory(tests)
 endif()
-
-set(CPACK_PACKAGE_NAME "kwin-autoscroll")
-set(CPACK_PACKAGE_VENDOR "KWin AutoScroll contributors")
-set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Windows-style middle-click auto-scroll for KWin")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-set(CPACK_SOURCE_GENERATOR "TXZ")
-set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${PROJECT_VERSION}")
-set(CPACK_SOURCE_IGNORE_FILES
-    "/build/"
-    "/build-dev/"
-    "/build-release/"
-    "/dist/"
-    "/\\\\.git/"
-    "/packaging/arch/(pkg|src)/"
-    "~$"
-)
-include(CPack)

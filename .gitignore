@@ -151,3 +151,6 @@ Desktop.ini
 *.log
 core
 core.*
+
+# Local reference image; the authored SVG is the distributed asset.
+/src/assets/user-anchor.png

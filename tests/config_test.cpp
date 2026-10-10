@@ -90,7 +90,7 @@ void ConfigTest::activationBehaviorRoundTrips() {
         KSharedConfig::openConfig(path, KConfig::SimpleConfig);
     AutoScrollConfig writer(config);
     QCOMPARE(writer.activationBehavior(),
-             AutoScrollConfig::EnumActivationBehavior::Toggle);
+             AutoScrollConfig::EnumActivationBehavior::PreserveClicks);
     writer.setActivationBehavior(
         AutoScrollConfig::EnumActivationBehavior::Combined);
     QVERIFY(writer.save());
@@ -112,7 +112,7 @@ void ConfigTest::legacyHoldBehaviorMigrates() {
   QVERIFY(directory.isValid());
   const KSharedConfig::Ptr config = KSharedConfig::openConfig(
       directory.filePath(QStringLiteral("kwinrc")), KConfig::SimpleConfig);
-  KConfigGroup group(config, QStringLiteral("Effect-autoscroll"));
+  KConfigGroup group(config, QStringLiteral("Effect-smoothautoscroll"));
   group.writeEntry(QStringLiteral("HoldToScroll"), true);
   config->sync();
 
@@ -129,7 +129,7 @@ void ConfigTest::legacyToggleBehaviorMigrates() {
   QVERIFY(directory.isValid());
   const KSharedConfig::Ptr config = KSharedConfig::openConfig(
       directory.filePath(QStringLiteral("kwinrc")), KConfig::SimpleConfig);
-  KConfigGroup group(config, QStringLiteral("Effect-autoscroll"));
+  KConfigGroup group(config, QStringLiteral("Effect-smoothautoscroll"));
   group.writeEntry(QStringLiteral("HoldToScroll"), false);
   config->sync();
 
@@ -146,7 +146,7 @@ void ConfigTest::existingActivationBehaviorIsNotOverwritten() {
   QVERIFY(directory.isValid());
   const KSharedConfig::Ptr config = KSharedConfig::openConfig(
       directory.filePath(QStringLiteral("kwinrc")), KConfig::SimpleConfig);
-  KConfigGroup group(config, QStringLiteral("Effect-autoscroll"));
+  KConfigGroup group(config, QStringLiteral("Effect-smoothautoscroll"));
   group.writeEntry(QStringLiteral("HoldToScroll"), true);
   group.writeEntry(
       QStringLiteral("ActivationBehavior"),
@@ -170,7 +170,7 @@ void ConfigTest::initiationAndExclusionDefaults() {
 
   QVERIFY(!settings.holdToScroll());
   QCOMPARE(settings.activationBehavior(),
-           AutoScrollConfig::EnumActivationBehavior::Toggle);
+           AutoScrollConfig::EnumActivationBehavior::PreserveClicks);
   QVERIFY(settings.excludedApplications().isEmpty());
 }
 
@@ -208,8 +208,8 @@ void ConfigTest::visualDefaults() {
       directory.filePath(QStringLiteral("kwinrc")), KConfig::SimpleConfig);
   AutoScrollConfig settings(config);
 
-  QCOMPARE(settings.glyphStyle(), QStringLiteral("breeze-dark"));
-  QCOMPARE(settings.glyphSize(), 40);
+  QCOMPARE(settings.glyphStyle(), QStringLiteral("user-anchor"));
+  QCOMPARE(settings.glyphSize(), 30);
 }
 
 void ConfigTest::visualSettingsRoundTrip() {

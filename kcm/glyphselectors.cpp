@@ -26,6 +26,9 @@ void setAppearanceControlSize(QComboBox *comboBox) {
 }
 
 QString styleName(QStringView styleId) {
+  if (styleId == u"user-anchor") {
+    return i18nc("@item:inlistbox autoscroll glyph style", "Polished four-arrow");
+  }
   if (styleId == u"breeze-dark") {
     return i18nc("@item:inlistbox autoscroll glyph style", "Breeze Dark");
   }
@@ -57,13 +60,10 @@ QIcon stylePreview(QStringView styleId) {
   preview.fill(Qt::transparent);
 
   const QImage anchor = renderGlyph(styleId, GlyphElement::Anchor, 34.0, 1.0);
-  const QImage direction =
-      renderGlyph(styleId, GlyphElement::Direction, 27.2, 1.0);
 
   QPainter painter(&preview);
   painter.setRenderHint(QPainter::Antialiasing);
-  painter.drawImage(QRectF(3.0, 3.0, 34.0, 34.0), anchor);
-  painter.drawImage(QRectF(45.0, 6.4, 27.2, 27.2), direction);
+  painter.drawImage(QRectF(21.0, 3.0, 34.0, 34.0), anchor);
   return QIcon(QPixmap::fromImage(preview));
 }
 
@@ -147,6 +147,7 @@ GlyphSizeComboBox::GlyphSizeComboBox(QWidget *parent) : QComboBox(parent) {
   auto *delegate = new GlyphSizeDelegate(this);
   setItemDelegate(delegate);
   view()->setMinimumWidth(188);
+  setToolTip(i18nc("@info:tooltip", "Size on a screen with a 1440-pixel short side. Scales proportionally on other screens."));
 
   for (const int size : glyphSizePresets()) {
     addItem(i18nc("@item:inlistbox autoscroll glyph size", "Size: %1", size),
@@ -164,7 +165,7 @@ int GlyphSizeComboBox::glyphSize() const {
 void GlyphSizeComboBox::setGlyphSize(int size) {
   const int normalized = normalizedGlyphSize(size);
   const int index = findData(normalized);
-  setCurrentIndex(index < 0 ? findData(40) : index);
+  setCurrentIndex(index < 0 ? findData(30) : index);
 }
 
 void GlyphSizeComboBox::setGlyphStyle(const QString &styleId) {

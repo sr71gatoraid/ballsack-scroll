@@ -17,6 +17,7 @@ enum class ActivationMode {
   Toggle,
   Hold,
   Combined,
+  PreserveClicks,
 };
 
 struct ActivationContext {

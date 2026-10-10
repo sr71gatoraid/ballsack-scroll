@@ -1,101 +1,33 @@
-<!--
-SPDX-FileCopyrightText: 2026 KWin AutoScroll contributors
-SPDX-License-Identifier: GPL-2.0-or-later
--->
+# Validation
 
-# Testing KWin AutoScroll
+Development validation was performed on Arch Linux, KWin 6.7.5, and Qt 6.12.
+Application compatibility outside the tested versions is not implied.
 
-Run automated tests from an out-of-tree build:
+Run the automated suites with `ctest --test-dir build --output-on-failure`.
+They cover scroll dynamics, activation state, application exclusions, settings,
+SVG rendering and transparency, screen-relative sizing, settings widgets, and
+plugin metadata. GUI tests use Qt's offscreen platform.
+
+The isolated runtime tests require an installed KWin Wayland binary, a compiler,
+Qt/Wayland development files, D-Bus, and wayland-scanner. The browser variants
+also require `electron` in PATH. They use temporary profiles and a private
+headless compositor; they do not open accounts or inspect application content.
 
 ```sh
-cmake -S . -B build -G Ninja -DBUILD_TESTING=ON
-cmake --build build
-ctest --test-dir build --output-on-failure
+./scripts/nested-smoke.sh native
+./scripts/nested-smoke.sh browser pane
+./scripts/nested-smoke.sh browser window
 ```
 
-The unit tests cover the speed curve, dead zone, signs, diagonal motion,
-maximum-speed cap, horizontal disablement, elapsed-time integration,
-fractional deltas, axis-stop generation, activation policy, click suppression,
-Escape suppression, toggle, hold, and combined initiation, two-event wheel cancellation,
-application-identity normalization and exclusion, target changes, locking,
-closure, teardown, configuration persistence, installed-application discovery,
-window-picker parsing, style discovery, SVG rendering at every preset and
-scale, and the custom selector properties.
-`pluginmetadata_test` also verifies that both plugins can be discovered and
-that the effect uses KWin's exact versioned plugin IID.
-Package verification requires an unversioned `kwin`/`kwin-wayland` runtime
-dependency while retaining exact target-root version and plugin-IID checks.
-The Fedora target additionally runs `rpmlint` against both the source and
-binary RPMs and performs a disposable DNF installation and RPM removal.
+The native test checks quick clicks, delayed and drag hold activation, free
+visible pointer motion, original client scroll targeting, a screen-relative
+anchor, release and hover restoration, dead-zone stops, Escape, and unloading.
 
-## Manual Wayland matrix
+The browser fixtures reproduce a large 500-pixel sideways move followed by
+upward motion, first across a non-scrolling sidebar and then past a window edge.
+The original vertical pane must scroll upward and stop on release.
 
-Install into a nested or disposable Plasma 6.4.3-or-newer Wayland session
-whose exact KWin patch release matches the package. Enable KWin AutoScroll
-under **System Settings → Window Management → Desktop Effects →
-Accessibility**.
-
-For every application class below, verify activation, vertical scrolling,
-horizontal scrolling where supported, all eight visual directions, returning
-to the dead zone, and cancellation by click, Escape, physical wheel, leaving
-the originating window, closing the target, screen locking, and disabling the
-effect:
-
-- Qt 6 application
-- GTK application
-- Chromium- or Firefox-based browser
-- Electron application
-- XWayland application (best effort)
-
-Also verify:
-
-- A plain middle-click activates, while modified middle-clicks pass through.
-- With each optional activation modifier selected, plain middle-clicks pass
-  through and only the exact configured modifier plus middle-click activates.
-- Modified activation does not generate scroll events until both the middle
-  button and modifier are released, in either release order.
-- In hold-to-scroll mode without a modifier, scrolling begins while the
-  middle button is down and stops when it is released.
-- In hold-to-scroll mode with a modifier, scrolling begins only after the modifier
-  is released while the middle button remains down. Releasing the middle
-  button first cancels without generating scrolling.
-- In combined mode, releasing the middle button without leaving the dead zone
-  creates a toggled session. Moving outside the dead zone while holding and
-  then releasing stops the session, even after returning to the dead zone.
-- With combined mode and a modifier, verify both the click and hold gestures
-  in both modifier/button release orders without any modified-wheel actions.
-- Add a native Wayland, XWayland, and Flatpak application through both the
-  running-window picker and installed-application chooser. Each entry survives
-  Apply and reopening the KCM, and duplicate additions are ignored.
-- In every excluded application, middle-click reaches the client normally and
-  AutoScroll does not hide the cursor, draw glyphs, or inject axis events.
-- Applying an exclusion for the active target or changing initiation mode
-  cancels the current session cleanly.
-- Exercise Steam and one Gamescope-hosted application and record whether KWin
-  exposes a per-application desktop ID or only the outer window class.
-- Desktops, panels, decorations, popups, internal KWin UI, locked sessions,
-  pointer-constrained clients, and active fullscreen effects do not activate.
-- The activating middle-button press and release never reach the client.
-- A cancellation click's complete press/release pair is consumed.
-- Escape press, repeats, and release are consumed.
-- One physical wheel event leaves the session active; the second cancels it.
-  Both events still reach the client.
-- Native pointer motion continues while auto-scrolling.
-- The cursor and anchor remain correctly sized while crossing mixed-DPI
-  outputs, and the native cursor is restored after every cancellation path.
-- Every visual style renders its matching anchor and directional pointer at
-  16, 40, and 72 pixels over both light and dark application content.
-- The size popup previews the selected style at each actual size, and changing
-  either appearance setting updates an active session without moving its
-  anchor or restarting scrolling.
-- Turning visual feedback off disables the appearance controls without
-  discarding their values; Defaults restores Breeze Dark at 40 pixels.
-- On KWin 6.4-6.6 with the OpenGL compositor, both the anchor and directional
-  glyph are visible; this specifically exercises the renderer-created image
-  item compatibility path.
-- Settings, Defaults, and Reset work, and saved settings take effect without a
-  compositor restart.
-- Logout/login loads the installed plugin without KWin warnings or crashes.
-
-Never perform the first manual run in a session containing unsaved work. A
-binary KWin effect executes inside the compositor process.
+For the Arch package, run `makepkg` with all dependencies installed, and inspect
+the result with `namcap`. Verify installed plugin paths, metadata IDs, the KWin
+plugin factory IID, and shared-library dependencies. A host build is not a clean
+chroot build; the CI job checks declared dependencies in a fresh Arch container.
