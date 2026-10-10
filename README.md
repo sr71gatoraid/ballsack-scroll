@@ -48,8 +48,9 @@ or helper is needed. Binaries currently target KWin 6.7.5; check the release's
 build metadata against your installed KWin version. After a KWin ABI update,
 a compatible rebuild must be published or built locally.
 
-To build the Arch package locally, download the source release, extract it,
-run `python scripts/make-source-release.py`, then run `makepkg -si` in `dist/arch`.
+To build the Arch package locally, clone this Git repository, run
+`python scripts/make-source-release.py`, then run `makepkg -si` in `dist/arch`.
+The release also includes its generated Arch recipe and matching source archive.
 
 Uninstall with `sudo pacman -R ballsack-scroll`.
 
