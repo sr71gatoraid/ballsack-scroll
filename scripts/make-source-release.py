@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create deterministic source and AUR submission files from this checkout."""
+"""Create deterministic source and Arch package files from this checkout."""
 from pathlib import Path
 import hashlib
 import os
@@ -9,17 +9,17 @@ import subprocess
 import tarfile
 
 root = Path(__file__).resolve().parents[1]
-match = re.search(r"project\(kwin-smooth-autoscroll VERSION ([0-9.]+)",
+match = re.search(r"project\(ballsack-scroll VERSION ([0-9.]+)",
                   (root / "CMakeLists.txt").read_text())
 if not match:
     raise SystemExit("Cannot read release version")
 version = match.group(1)
-name = f"kwin-smooth-autoscroll-{version}"
+name = f"ballsack-scroll-{version}"
 epoch = int(os.environ.get("SOURCE_DATE_EPOCH") or subprocess.check_output(
     ["git", "log", "-1", "--format=%ct"], cwd=root, text=True).strip())
 dist = root / "dist"
-aur = dist / "aur"
-aur.mkdir(parents=True, exist_ok=True)
+arch = dist / "arch"
+arch.mkdir(parents=True, exist_ok=True)
 archive = dist / f"{name}.tar.xz"
 files = subprocess.check_output(
     ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"], cwd=root
@@ -44,10 +44,10 @@ with tarfile.open(archive, "w:xz", format=tarfile.GNU_FORMAT) as output:
         with path.open("rb") as source:
             output.addfile(info, source)
 checksum = hashlib.sha256(archive.read_bytes()).hexdigest()
-recipe = (root / "packaging/aur/PKGBUILD.in").read_text()
-(aur / "PKGBUILD").write_text(recipe.replace("@VERSION@", version).replace("@SHA256@", checksum))
-shutil.copy2(root / "packaging/aur/kwin-smooth-autoscroll.install", aur)
-with (aur / ".SRCINFO").open("w") as destination:
-    subprocess.run(["makepkg", "--printsrcinfo"], cwd=aur, stdout=destination, check=True)
+recipe = (root / "packaging/arch/PKGBUILD.in").read_text()
+(arch / "PKGBUILD").write_text(recipe.replace("@VERSION@", version).replace("@SHA256@", checksum))
+shutil.copy2(root / "packaging/arch/ballsack-scroll.install", arch)
+with (arch / ".SRCINFO").open("w") as destination:
+    subprocess.run(["makepkg", "--printsrcinfo"], cwd=arch, stdout=destination, check=True)
 (dist / "SHA256SUMS").write_text(f"{checksum}  {archive.name}\n")
-print(f"Source: {archive}\nAUR files: {aur}\nSHA256: {checksum}")
+print(f"Source: {archive}\nArch package files: {arch}\nSHA256: {checksum}")

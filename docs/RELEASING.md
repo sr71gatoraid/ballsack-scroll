@@ -1,42 +1,42 @@
-# Release 0.1.0
+# Release and signed repository
 
-The first public release is a preview for KDE Plasma on Wayland. The GitHub
-project is `sr71gatoraid/kwin-smooth-autoscroll`; the AUR package name is
-`kwin-smooth-autoscroll`.
-
-1. Run the build, automated suites, and isolated runtime tests in TESTING.md.
-2. Commit the release source. Set `SOURCE_DATE_EPOCH` to that commit's timestamp
-   when regenerating artifacts to obtain the same source archive.
-3. Run `python scripts/make-source-release.py`. It produces the source tarball,
-   `SHA256SUMS`, and `dist/aur/{PKGBUILD,.SRCINFO,kwin-smooth-autoscroll.install}`.
-4. Build the package without installing it:
+1. Bump the source version and changelog. Run the suites and isolated runtime
+   tests in TESTING.md, then commit the release source.
+2. Run `python scripts/make-source-release.py`. Its source archive uses the
+   latest commit timestamp, or explicit `SOURCE_DATE_EPOCH`, for reproducibility.
+   The script writes the archive, SHA256SUMS, and `dist/arch` package recipe.
+3. Build with `makepkg --cleanbuild --noconfirm` as an ordinary user in a clean
+   current Arch environment. Set SRCDEST and PKGDEST to the absolute dist path.
+   Run namcap and test the packaged plugin in a nested compositor.
+4. Push source and an annotated version tag. Publish the corresponding source,
+   binary package, checksums, and build metadata as a GitHub version release.
+   GPL corresponding source must remain publicly available with its binary.
+5. Build and publish the signed repository using the dedicated local key:
 
    ```sh
-   export SRCDEST="$PWD/dist"
-   export PKGDEST="$PWD/dist"
-   export BUILDDIR="$PWD/build-aur"
-   cd dist/aur
-   makepkg --cleanbuild --noconfirm
+   python scripts/build-pacman-repo.py \
+     --package dist/ballsack-scroll-VERSION-REL-x86_64.pkg.tar.zst \
+     --signing-home ~/.local/share/ballsack-scroll/repository-signing \
+     --publish
    ```
 
-5. Inspect it with namcap, confirm the effect and configuration plugin IDs, and
-   verify the embedded KWin factory IID matches the build headers. The binary
-   package is tied to the build KWin ABI; the AUR recipe builds locally instead.
-6. Authenticate with `gh auth login --web --hostname github.com` and create the
-   public GitHub repository if it does not exist. Push the source and create
-   tag `v0.1.0`. Attach the source archive, `SHA256SUMS`, binary package, and build
-   metadata to the GitHub release. Mark the first preview as a prerelease.
-7. Only after the source URL downloads and passes its checksum, push the three
-   AUR files to `ssh://aur@aur.archlinux.org/kwin-smooth-autoscroll.git` using the
-   maintainer's registered AUR SSH key. AUR stores recipes and metadata, not
-   binaries. Its first package commit requires a registered AUR account.
-8. Once published, update the README's pending-publication note.
+The signing key's private material stays outside the checkout and is never
+uploaded to GitHub. Only its public certificate, package and database
+signatures, repository databases, installer, and build information are uploaded
+to the stable `pacman-repo` release. Keep a secure backup of the private key.
+The certificate expires in October 2028; renew it and publish its public
+certificate before expiration. A replacement key requires updating the setup
+fingerprint and having existing users explicitly trust the replacement.
 
-The install script prints setup guidance. Packaging does not enable the effect
-for all users, modify input devices, alter clipboard behavior, or pin KWin to a
-particular desktop version. Rebuild after KWin upgrades.
+Package updates use normal pacman version ordering. Increment pkgrel for a
+rebuild against a newer KWin ABI, even when the source version is unchanged.
+The package does not pin KWin or block desktop upgrades. Verify every published
+update by installing from the remote signed repository in a clean Arch container.
 
-The fork retains the upstream Git history and GPL license. The historical
-cross-distribution binary build matrix is omitted because this fork has not
-validated those older KWin versions. Other KDE distributions can build the
-public source against their own development headers.
+The installer configures pacman; it does not enable the effect for every user
+or alter mouse and clipboard settings. Enable Ballsack Scroll in Desktop Effects.
+The stable plugin ID is ballsackscroll; the existing Effect-smoothautoscroll
+settings group is retained to preserve preferences. Log out after upgrades.
+
+The fork retains upstream Git history and GPL notices. Other KDE distributions
+can build the public source against their own development headers.

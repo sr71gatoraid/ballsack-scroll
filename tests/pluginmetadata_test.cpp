@@ -31,13 +31,13 @@ void PluginMetadataTest::effectMetadata() {
   const QJsonObject plugin =
       metadata.value(QStringLiteral("KPlugin")).toObject();
   QCOMPARE(QFileInfo(QStringLiteral(AUTOSCROLL_EFFECT_PATH)).completeBaseName(),
-           QStringLiteral("smoothautoscroll"));
+           QStringLiteral("ballsackscroll"));
   QVERIFY(!plugin.contains(QStringLiteral("Id")));
   QCOMPARE(plugin.value(QStringLiteral("EnabledByDefault")).toBool(), false);
   QCOMPARE(plugin.value(QStringLiteral("Version")).toString(),
            QStringLiteral(AUTOSCROLL_PROJECT_VERSION));
   QCOMPARE(metadata.value(QStringLiteral("X-DocPath")).toString(),
-           QStringLiteral("https://github.com/sr71gatoraid/kwin-smooth-autoscroll"));
+           QStringLiteral("https://github.com/sr71gatoraid/ballsack-scroll"));
 }
 
 void PluginMetadataTest::kcmMetadata() {
@@ -53,7 +53,7 @@ void PluginMetadataTest::kcmMetadata() {
   QCOMPARE(plugin.value(QStringLiteral("Version")).toString(),
            QStringLiteral(AUTOSCROLL_PROJECT_VERSION));
   QCOMPARE(metadata.value(QStringLiteral("X-DocPath")).toString(),
-           QStringLiteral("https://github.com/sr71gatoraid/kwin-smooth-autoscroll"));
+           QStringLiteral("https://github.com/sr71gatoraid/ballsack-scroll"));
 }
 
 void PluginMetadataTest::supportedKWinFloor() {

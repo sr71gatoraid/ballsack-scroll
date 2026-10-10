@@ -1,4 +1,4 @@
-# Smooth Autoscroll
+# Ballsack Scroll
 
 Smooth, directional middle-button scrolling for **KDE Plasma on Wayland**.
 Hold the middle button, move the pointer away from the four-arrow anchor, and
@@ -25,23 +25,36 @@ KWin to an exact version or prevent desktop updates.
 
 ## Install on Arch Linux
 
-The package name is `kwin-smooth-autoscroll`. AUR publication is pending for the
-first release; the instructions below become usable once it is published:
+The signed binary repository supports x86_64 Arch Linux. Add it once and install:
 
 ```sh
-git clone https://aur.archlinux.org/kwin-smooth-autoscroll.git
-cd kwin-smooth-autoscroll
-makepkg -si
+bash <(curl -fsSL https://github.com/sr71gatoraid/ballsack-scroll/releases/download/pacman-repo/setup-pacman.sh)
 ```
 
-A release `.pkg.tar.zst` can also be installed with `sudo pacman -U`, provided its
-KWin ABI matches your installed version. Matching source is included in every
-release.
+The script imports and locally trusts the repository's public key, adds its
+pacman configuration, and runs a full system upgrade with package installation.
+Read [the setup script](packaging/pacman/setup-pacman.sh) before running it.
+Public signing fingerprint: `B83D9325C421436F174930DD2B63F6A3F7ECE7C8`.
+Package and repository database signatures are required.
 
-Uninstall with `sudo pacman -R kwin-smooth-autoscroll`.
+Once configured, install or reinstall with:
+
+```sh
+sudo pacman -Syu ballsack-scroll
+```
+
+Later updates arrive through your ordinary `sudo pacman -Syu`. No AUR account
+or helper is needed. Binaries currently target KWin 6.7.5; check the release's
+build metadata against your installed KWin version. After a KWin ABI update,
+a compatible rebuild must be published or built locally.
+
+To build the Arch package locally, download the source release, extract it,
+run `python scripts/make-source-release.py`, then run `makepkg -si` in `dist/arch`.
+
+Uninstall with `sudo pacman -R ballsack-scroll`.
 
 After installation, log out and back in. Open **System Settings → Window
-Management → Desktop Effects**, enable **Smooth Autoscroll**, and use its
+Management → Desktop Effects**, enable **Ballsack Scroll**, and use its
 Configure button to adjust speed, dead zone, appearance, and excluded apps.
 
 If your mouse has a separate “hold middle button to scroll” setting, disable it
@@ -63,7 +76,7 @@ sudo cmake --install build
 ```
 
 Then log out and back in and enable the effect in System Settings. The stable
-plugin ID is `smoothautoscroll`; no session restart is attempted by the installer.
+plugin ID is `ballsackscroll`; no session restart is attempted by the installer.
 
 ## Use
 
@@ -82,13 +95,13 @@ clicks; the default hold mode preserves quick clicks.
 
 See [release instructions](docs/RELEASING.md) and
 [validation instructions](docs/TESTING.md). Build a source archive and
-checksum-verified AUR submission files with:
+checksum-verified Arch package files with:
 
 ```sh
 python scripts/make-source-release.py
 ```
 
-Public project: https://github.com/sr71gatoraid/kwin-smooth-autoscroll
+Public project: https://github.com/sr71gatoraid/ballsack-scroll
 
 ## Credits and license
 

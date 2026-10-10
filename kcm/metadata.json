@@ -1,9 +1,9 @@
 {
     "KPlugin": {
-        "Description": "Configure the KWin Smooth Autoscroll effect",
+        "Description": "Configure the KWin Ballsack Scroll effect",
         "License": "GPL-2.0-or-later",
-        "Name": "Smooth Autoscroll Configuration",
-        "Version": "0.1.0"
+        "Name": "Ballsack Scroll Configuration",
+        "Version": "0.1.1"
     },
-    "X-DocPath": "https://github.com/sr71gatoraid/kwin-smooth-autoscroll"
+    "X-DocPath": "https://github.com/sr71gatoraid/ballsack-scroll"
 }

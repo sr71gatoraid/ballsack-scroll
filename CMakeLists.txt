@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.24)
 
-project(kwin-smooth-autoscroll VERSION 0.1.0 LANGUAGES CXX)
+project(ballsack-scroll VERSION 0.1.1 LANGUAGES CXX)
 
 set(QT_MIN_VERSION "6.7.0")
 set(KF_MIN_VERSION "6.0.0")

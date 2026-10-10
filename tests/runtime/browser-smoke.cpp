@@ -16,14 +16,14 @@
 
 int main(int argc, char **argv) {
   QCoreApplication app(argc,argv);
-  if (!qEnvironmentVariable("WAYLAND_DISPLAY").startsWith("smooth-autoscroll-test-")) return 2;
-  FILE *report=std::fopen(qgetenv("SMOOTH_AUTOSCROLL_TEST_REPORT").constData(),"w");
+  if (!qEnvironmentVariable("WAYLAND_DISPLAY").startsWith("ballsack-scroll-test-")) return 2;
+  FILE *report=std::fopen(qgetenv("BALLSACK_SCROLL_TEST_REPORT").constData(),"w");
   if (!report) return 2;
-  const QString statePath=qEnvironmentVariable("SMOOTH_AUTOSCROLL_BROWSER_STATE");
+  const QString statePath=qEnvironmentVariable("BALLSACK_SCROLL_BROWSER_STATE");
   QProcess browser;
   browser.setProgram("electron42");
   browser.setArguments({"--no-sandbox","--ozone-platform=wayland","--disable-gpu",
-    qEnvironmentVariable("SMOOTH_AUTOSCROLL_ELECTRON_FIXTURE")});
+    qEnvironmentVariable("BALLSACK_SCROLL_ELECTRON_FIXTURE")});
   browser.setProcessChannelMode(QProcess::ForwardedChannels);
   browser.start();
   auto *display=wl_display_connect(nullptr);
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
     }
     ready.stop();
     QDBusInterface effects("org.kde.KWin","/Effects","org.kde.kwin.Effects");
-    QDBusReply<bool> loaded=effects.call("loadEffect","smoothautoscroll");
+    QDBusReply<bool> loaded=effects.call("loadEffect","ballsackscroll");
     check(loaded.isValid() && loaded.value(),"effect loads for Electron client");
     baseline=state()["y"].toInt();
     move(220,320);
@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
     QTimer::singleShot(900,[&] {
       const auto s=state();
       QDBusInterface effects("org.kde.KWin","/Effects","org.kde.kwin.Effects");
-      check(effects.property("activeEffects").toStringList().contains("smoothautoscroll"),
+      check(effects.property("activeEffects").toStringList().contains("ballsackscroll"),
             "large sideways travel keeps the hold session active");
       check(s["horizontal"].toInt()>0 && s["y"].toInt()==baseline,
             "sideways input on vertical-only content leaves it stationary");
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
     QTimer::singleShot(3000,[&] {
       check(state()["y"].toInt()==baseline,"release stops Electron scrolling without momentum");
       QDBusInterface effects("org.kde.KWin","/Effects","org.kde.kwin.Effects");
-      effects.call("unloadEffect","smoothautoscroll");
+      effects.call("unloadEffect","ballsackscroll");
       std::fprintf(report,"Integration failures: %d\n",failures);
       std::fflush(report);
       app.exit(failures ? 1 : 0);

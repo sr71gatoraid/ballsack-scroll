@@ -105,7 +105,7 @@ QString AutoScrollEffect::debug(const QString &) const {
   const QPointF visiblePointer = KWin::Cursors::self()->mouse()->pos();
   const QPointF clientPointer = KWin::waylandServer()->seat()->pointerPos();
   return QString::fromUtf8(QJsonDocument(QJsonObject{
-      {QStringLiteral("revision"), QStringLiteral("smooth-autoscroll-0.1.0")},
+      {QStringLiteral("revision"), QStringLiteral("ballsack-scroll-0.1.1")},
       {QStringLiteral("active"), m_session.isActive()},
       {QStringLiteral("glyphSize"), m_visual->logicalSize()},
       {QStringLiteral("pointerX"), pointer.x()},

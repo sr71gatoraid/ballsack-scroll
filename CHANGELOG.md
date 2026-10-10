@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1
+
+- Rename the project, package, and desktop effect to Ballsack Scroll.
+- Publish a signed pacman repository with a one-time setup script.
+- Preserve existing scroll preferences across the plugin rename.
+- Replace the former kwin-smooth-autoscroll package during upgrades.
+
 ## 0.1.0 — first public preview
 
 - Preserve native quick middle clicks without requiring modifiers.

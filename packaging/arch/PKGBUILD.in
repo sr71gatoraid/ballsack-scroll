@@ -1,19 +1,21 @@
 # Maintainer: sr71gatoraid (https://github.com/sr71gatoraid)
 # SPDX-License-Identifier: GPL-2.0-or-later
-pkgname=kwin-smooth-autoscroll
+pkgname=ballsack-scroll
 pkgver=@VERSION@
 pkgrel=1
 pkgdesc='Smooth middle-button hold scrolling for KDE Wayland with native clicks and a free pointer'
 arch=('x86_64')
-url='https://github.com/sr71gatoraid/kwin-smooth-autoscroll'
+url='https://github.com/sr71gatoraid/ballsack-scroll'
 license=('GPL-2.0-or-later')
+conflicts=('kwin-smooth-autoscroll')
+replaces=('kwin-smooth-autoscroll')
 depends=('kwin>=6.7.5' 'libstdc++' 'glibc' 'kcmutils' 'kconfig'
          'kcoreaddons' 'ki18n'
          'qt6-base' 'qt6-svg')
 makedepends=('cmake' 'extra-cmake-modules' 'ninja' 'vulkan-headers'
              'kconfigwidgets' 'kwidgetsaddons')
 checkdepends=('appstream')
-install=kwin-smooth-autoscroll.install
+install=ballsack-scroll.install
 source=("${pkgname}-${pkgver}.tar.xz::${url}/releases/download/v${pkgver}/${pkgname}-${pkgver}.tar.xz")
 sha256sums=('@SHA256@')
 

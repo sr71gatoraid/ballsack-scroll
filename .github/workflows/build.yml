@@ -26,8 +26,8 @@ jobs:
             python scripts/make-source-release.py
             export SRCDEST="$GITHUB_WORKSPACE/dist"
             export PKGDEST="$GITHUB_WORKSPACE/dist"
-            export BUILDDIR="$GITHUB_WORKSPACE/build-aur"
-            cd dist/aur
+            export BUILDDIR="$GITHUB_WORKSPACE/build-arch"
+            cd dist/arch
             makepkg --cleanbuild --noconfirm
-            namcap PKGBUILD "$PKGDEST"/kwin-smooth-autoscroll-*.pkg.tar.zst
+            namcap PKGBUILD "$PKGDEST"/ballsack-scroll-*.pkg.tar.zst
           '

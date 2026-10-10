@@ -38,9 +38,9 @@ public:
 
 int main(int argc, char **argv) {
   QApplication app(argc, argv);
-  FILE *report = std::fopen(qgetenv("SMOOTH_AUTOSCROLL_TEST_REPORT").constData(), "w");
+  FILE *report = std::fopen(qgetenv("BALLSACK_SCROLL_TEST_REPORT").constData(), "w");
   if (!report) return 2;
-  if (!qEnvironmentVariable("WAYLAND_DISPLAY").startsWith("smooth-autoscroll-test-")) {
+  if (!qEnvironmentVariable("WAYLAND_DISPLAY").startsWith("ballsack-scroll-test-")) {
     qCritical() << "Refusing to inject input outside the isolated test compositor";
     return 2;
   }
@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
   wl_registry_add_listener(registry, &listener, &fake);
   wl_display_roundtrip(display);
   if (!fake) { qCritical() << "Isolated compositor did not expose fake input"; return 2; }
-  org_kde_kwin_fake_input_authenticate(fake, "Smooth Autoscroll smoke test", "Isolated integration test");
+  org_kde_kwin_fake_input_authenticate(fake, "Ballsack Scroll smoke test", "Isolated integration test");
   wl_display_flush(display);
   auto move = [&](int x, int y) {
     org_kde_kwin_fake_input_pointer_motion_absolute(fake, wl_fixed_from_int(x), wl_fixed_from_int(y));
@@ -79,11 +79,11 @@ int main(int argc, char **argv) {
   };
   auto active = [&] {
     QDBusInterface effects("org.kde.KWin", "/Effects", "org.kde.kwin.Effects");
-    return effects.property("activeEffects").toStringList().contains("smoothautoscroll");
+    return effects.property("activeEffects").toStringList().contains("ballsackscroll");
   };
   auto pointerState = [&] {
     QDBusInterface effects("org.kde.KWin", "/Effects", "org.kde.kwin.Effects");
-    QDBusReply<QString> reply = effects.call("debug", "smoothautoscroll", "");
+    QDBusReply<QString> reply = effects.call("debug", "ballsackscroll", "");
     return QJsonDocument::fromJson(reply.value().toUtf8()).object();
   };
   int failures = 0, baseline = 0, movingCount = 0;
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
   };
   QTimer::singleShot(500, [&] {
     QDBusInterface effects("org.kde.KWin", "/Effects", "org.kde.kwin.Effects");
-    QDBusReply<bool> loaded = effects.call("loadEffect", "smoothautoscroll");
+    QDBusReply<bool> loaded = effects.call("loadEffect", "ballsackscroll");
     check(loaded.isValid() && loaded.value(), "effect loads into matching KWin");
     move(400, 300);
   });
@@ -166,8 +166,8 @@ int main(int argc, char **argv) {
     std::fprintf(report, "Wheel count after Escape: %d -> %d\n", baseline, window.wheels);
     check(window.wheels == baseline, "Escape cancels the scrolling session");
     QDBusInterface effects("org.kde.KWin", "/Effects", "org.kde.kwin.Effects");
-    effects.call("unloadEffect", "smoothautoscroll");
-    QDBusReply<bool> loaded = effects.call("isEffectLoaded", "smoothautoscroll");
+    effects.call("unloadEffect", "ballsackscroll");
+    QDBusReply<bool> loaded = effects.call("isEffectLoaded", "ballsackscroll");
     check(loaded.isValid() && !loaded.value(), "effect unloads cleanly");
     qInfo() << "Integration failures:" << failures;
     std::fprintf(report, "Integration failures: %d\n", failures);

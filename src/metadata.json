@@ -9,9 +9,9 @@
         "Description": "Smooth middle-button hold scrolling with native clicks and a free pointer",
         "EnabledByDefault": false,
         "License": "GPL-2.0-or-later",
-        "Name": "Smooth Autoscroll",
-        "Version": "0.1.0"
+        "Name": "Ballsack Scroll",
+        "Version": "0.1.1"
     },
-    "X-DocPath": "https://github.com/sr71gatoraid/kwin-smooth-autoscroll",
-    "X-KDE-ConfigModule": "kwin_smoothautoscroll_config"
+    "X-DocPath": "https://github.com/sr71gatoraid/ballsack-scroll",
+    "X-KDE-ConfigModule": "kwin_ballsackscroll_config"
 }

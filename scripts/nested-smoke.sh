@@ -17,24 +17,24 @@ test_config=$(mktemp -d)
 trap 'rm -r -- "$test_config"' EXIT
 cat > "$test_config/kwinrc" <<'CONFIG'
 [Plugins]
-smoothautoscrollEnabled=false
+ballsackscrollEnabled=false
 CONFIG
 export XDG_CONFIG_HOME="$test_config"
-export QT_PLUGIN_PATH="${SMOOTH_AUTOSCROLL_TEST_PLUGIN_ROOT:-$project_dir/build/bin}"
+export QT_PLUGIN_PATH="${BALLSACK_SCROLL_TEST_PLUGIN_ROOT:-$project_dir/build/bin}"
 export QT_QPA_PLATFORM=wayland
 export KWIN_COMPOSE=Q
 export KWIN_WAYLAND_NO_PERMISSION_CHECKS=1
 export QT_QPA_PLATFORMTHEME=generic
 export QT_FORCE_STDERR_LOGGING=1
-export WAYLAND_DISPLAY="smooth-autoscroll-test-$$"
-export SMOOTH_AUTOSCROLL_TEST_REPORT="$runtime_build/report-$test_variant.txt"
-export SMOOTH_AUTOSCROLL_TEST_VARIANT="$test_variant"
-export SMOOTH_AUTOSCROLL_BROWSER_STATE="$test_config/browser-state.json"
-export SMOOTH_AUTOSCROLL_ELECTRON_FIXTURE="$project_dir/tests/runtime/electron-smoke.cjs"
-if [[ -f "$SMOOTH_AUTOSCROLL_TEST_REPORT" ]]; then rm -- "$SMOOTH_AUTOSCROLL_TEST_REPORT"; fi
+export WAYLAND_DISPLAY="ballsack-scroll-test-$$"
+export BALLSACK_SCROLL_TEST_REPORT="$runtime_build/report-$test_variant.txt"
+export BALLSACK_SCROLL_TEST_VARIANT="$test_variant"
+export BALLSACK_SCROLL_BROWSER_STATE="$test_config/browser-state.json"
+export BALLSACK_SCROLL_ELECTRON_FIXTURE="$project_dir/tests/runtime/electron-smoke.cjs"
+if [[ -f "$BALLSACK_SCROLL_TEST_REPORT" ]]; then rm -- "$BALLSACK_SCROLL_TEST_REPORT"; fi
 unset DISPLAY
 timeout 20s dbus-run-session -- kwin_wayland --virtual --width 800 --height 600 \
   --socket "$WAYLAND_DISPLAY" --no-lockscreen --no-global-shortcuts --no-kactivities \
   --exit-with-session "$runtime_build/$client_kind-smoke"
-cat "$SMOOTH_AUTOSCROLL_TEST_REPORT"
-rg -q '^Integration failures: 0$' "$SMOOTH_AUTOSCROLL_TEST_REPORT"
+cat "$BALLSACK_SCROLL_TEST_REPORT"
+rg -q '^Integration failures: 0$' "$BALLSACK_SCROLL_TEST_REPORT"

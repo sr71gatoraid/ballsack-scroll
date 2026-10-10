@@ -6,4 +6,4 @@ cmake -S "$project_dir" -B "$project_dir/build" -G Ninja -DCMAKE_BUILD_TYPE=Rele
 cmake --build "$project_dir/build" --parallel 4
 ctest --test-dir "$project_dir/build" --output-on-failure
 sudo cmake --install "$project_dir/build"
-printf '%s\n' 'Smooth Autoscroll installed. Log out and back in, then enable it in Desktop Effects.'
+printf '%s\n' 'Ballsack Scroll installed. Log out and back in, then enable it in Desktop Effects.'

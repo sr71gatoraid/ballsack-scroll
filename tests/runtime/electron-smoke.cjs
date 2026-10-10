@@ -4,7 +4,7 @@ const fs = require('node:fs');
 app.commandLine.appendSwitch('ozone-platform', 'wayland');
 app.disableHardwareAcceleration();
 app.whenReady().then(async () => {
-  const outsideWindow=process.env.SMOOTH_AUTOSCROLL_TEST_VARIANT==='window';
+  const outsideWindow=process.env.BALLSACK_SCROLL_TEST_VARIANT==='window';
   const win = new BrowserWindow({x:0,y:0,width:outsideWindow ? 600 : 800, height:600, frame:false,
     fullscreen:!outsideWindow, webPreferences:{contextIsolation:true, sandbox:true}});
   await win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(`
@@ -25,7 +25,7 @@ app.whenReady().then(async () => {
         vertical:wheels.filter(e=>e[1]!==0).length,
         horizontal:wheels.filter(e=>e[0]!==0).length
       })`);
-      const destination=process.env.SMOOTH_AUTOSCROLL_BROWSER_STATE;
+      const destination=process.env.BALLSACK_SCROLL_BROWSER_STATE;
       fs.writeFileSync(destination+'.tmp',data);
       fs.renameSync(destination+'.tmp',destination);
     } catch (_) {}
