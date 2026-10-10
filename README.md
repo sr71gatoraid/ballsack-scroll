@@ -8,9 +8,7 @@ Quick middle clicks keep their normal actions, including closing tabs and openin
 links. No modifier is required. The real pointer remains visible and free;
 scrolling stays at its original target even across sidebars and window edges.
 
-The anchor is SVG artwork with charcoal arrows, a translucent grey disc, and a
-subtle gleam. Its default diameter is 30 pixels on a 1440p screen and scales with
-the screen's shorter side, accounting for KDE display scaling.
+I like poop i like poop this is made by AI i have no idea what i am doing this is completely authored by AI i have no idea how the hell this was put together
 
 ## Compatibility
 
